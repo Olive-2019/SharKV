@@ -5,10 +5,12 @@ using std::mutex;
 class TimeoutCounter
 {
 	int electionTimeouts;
-	//flag用于标志该周期内是否收到心跳，如果收到则置true
+	// flag用于标志该周期内是否收到心跳，如果收到则置true
 	bool receiveInfoFlag;
-	//用于防止flag幻读
+	// 用于防止flag幻读
 	mutex flagLock;
+	// 是否停止
+	bool stop;
 public:
 	// 初始化超时计时器，随机一个超时阈值
 	TimeoutCounter();
@@ -16,5 +18,7 @@ public:
 	void setReceiveInfoFlag();
 	// 阻塞运行，如果能返回，说明这个周期超时了
 	void run();
+	// 计时器停止，退出
+	void stopCounter();
 };
 

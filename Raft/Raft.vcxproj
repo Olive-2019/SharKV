@@ -129,6 +129,7 @@
   <ItemGroup>
     <ClCompile Include="AppendEntries.cpp" />
     <ClCompile Include="Candidate.cpp" />
+    <ClCompile Include="FileOperator.cpp" />
     <ClCompile Include="Follower.cpp" />
     <ClCompile Include="Leader.cpp" />
     <ClCompile Include="LogEntry.cpp" />
@@ -136,20 +137,22 @@
     <ClCompile Include="POJO.cpp" />
     <ClCompile Include="Raft.cpp" />
     <ClCompile Include="RequestVote.cpp" />
+    <ClCompile Include="ServerAddressReader.cpp" />
     <ClCompile Include="State.cpp" />
     <ClCompile Include="TimeoutCounter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppendEntries.h" />
     <ClInclude Include="Candidate.h" />
+    <ClInclude Include="FileOperator.h" />
     <ClInclude Include="Follower.h" />
     <ClInclude Include="Leader.h" />
     <ClInclude Include="LogEntry.h" />
     <ClInclude Include="POJO.h" />
     <ClInclude Include="Raft.h" />
     <ClInclude Include="RequestVote.h" />
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="ServerState.h" />
+    <ClInclude Include="ServerAddressReader.h" />
+    <ClInclude Include="source.h" />
     <ClInclude Include="State.h" />
     <ClInclude Include="TimeoutCounter.h" />
   </ItemGroup>

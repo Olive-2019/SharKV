@@ -2,6 +2,7 @@
 #include <Windows.h>
 TimeoutCounter::TimeoutCounter() {
 	receiveInfoFlag = false;
+	stop = false;
 	std::default_random_engine randomEngine;
 	randomEngine.seed(time(0));
 	std::uniform_int_distribution<int> u(150, 300); // ×ó±ÕÓÒ±ÕÇø¼ä
@@ -13,7 +14,7 @@ void TimeoutCounter::setReceiveInfoFlag() {
 	flagLock.unlock();
 }
 void TimeoutCounter::run() {
-	while (true) {
+	while (!stop) {
 		flagLock.lock();
 		receiveInfoFlag = false;
 		flagLock.unlock();
@@ -22,4 +23,7 @@ void TimeoutCounter::run() {
 		if (!receiveInfoFlag) break;
 		flagLock.unlock();
 	}
+}
+void TimeoutCounter::stopCounter() {
+	stop = true;
 }

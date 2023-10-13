@@ -1,9 +1,7 @@
 #pragma once
-#include "string"
-#include <exception>
-using std::string;
-using std::to_string;
-using std::exception;
+#include "source.h"
+
+
 class POJO
 {
 protected:
