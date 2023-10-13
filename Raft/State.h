@@ -2,6 +2,9 @@
 #include "source.h"
 #include "LogEntry.h"
 #include "TimeoutCounter.h"
+#include "ServerAddressReader.h"
+#include "RequestVote.h"
+#include "AppendEntries.h"
 #include <map>
 using std::pair;
 using std::map;
@@ -22,6 +25,8 @@ protected:
 	NetWorkAddress appendEntriesAddress;
 	// 状态机用于接收requestVote的ip和port
 	NetWorkAddress requestVoteAddress;
+	// 集群中各服务器的地址(leader用于发送AppendEntries，candidate用于发送requestVote，follower用于转发请求)
+	map<int, NetWorkAddress> serverAddress;
 
 
 	/*易失状态，不需要持久化*/
@@ -42,16 +47,16 @@ protected:
 	// 计算超时的线程
 	void timeoutCounterThread();
 	// 等待接收AppendEntries
-	string appendEntries(string appendEntriesCodedIntoString);
+	virtual string appendEntries(string appendEntriesCodedIntoString) = 0;
 	// 注册等待接收AppendEntries
 	void registerAppendEntries();
 	// 投票线程RequestVote
-	string requestVote(string requestVoteCodedIntoString);
+	virtual string requestVote(string requestVoteCodedIntoString) = 0;
 	// 注册投票线程RequestVote
 	void registerRequestVote();
 public:
-	State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,
-		NetWorkAddress requestVoteAddress, ServerState state, int commitIndex, int lastApplied);
+	State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,NetWorkAddress requestVoteAddress, 
+		ServerState state, int commitIndex, int lastApplied, vector<LogEntry> logEntries);
 	// 运行该机器，返回值是下一个状态
 	virtual State* run() = 0;
 };
