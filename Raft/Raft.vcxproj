@@ -136,6 +136,7 @@
     <ClCompile Include="Raft.cpp" />
     <ClCompile Include="RequestVote.cpp" />
     <ClCompile Include="State.cpp" />
+    <ClCompile Include="TimeoutCounter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppendEntries.h" />
@@ -148,6 +149,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="ServerState.h" />
     <ClInclude Include="State.h" />
+    <ClInclude Include="TimeoutCounter.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Raft.rc" />

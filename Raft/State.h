@@ -1,6 +1,7 @@
 #pragma once
 #include "ServerState.h"
 #include "LogEntry.h"
+#include "TimeoutCounter.h"
 class State
 {
 	/*需要持久化的state*/
@@ -10,6 +11,28 @@ class State
 	int votedFor;
 	// 当前server的所有log entries，每一条log entry包含命令和term编号
 	vector<LogEntry> logEntries;
+	//状态机id
+	int ID;
+
+	/*易失状态，不需要持久化*/
+	// 当前状态
 	ServerState state;
+	//最大的已经commit的log entries index
+	int commitIndex;
+	//最新加入的log entries index
+	int lastApplied;
+	// 用于计算超时的类
+	TimeoutCounter timeoutCounter;
+
+
+	// 计算超时的线程
+	void timeoutCounterThread();
+	// 等待接收AppendEntries
+	void receiveAppendEntries();
+	// 投票线程RequestVote
+	void receiveRequestVote();
+public:
+	// 运行该机器，返回值是下一个状态
+	virtual State* run();
 };
 

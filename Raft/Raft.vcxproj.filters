@@ -42,6 +42,9 @@
     <ClCompile Include="LogEntry.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="TimeoutCounter.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Raft.h">
@@ -72,6 +75,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="LogEntry.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeoutCounter.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
