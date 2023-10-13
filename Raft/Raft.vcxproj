@@ -127,12 +127,30 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AppendEntries.cpp" />
+    <ClCompile Include="Candidate.cpp" />
+    <ClCompile Include="Follower.cpp" />
+    <ClCompile Include="Leader.cpp" />
+    <ClCompile Include="LogEntry.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Raft.cpp" />
+    <ClCompile Include="RequestVote.cpp" />
+    <ClCompile Include="State.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AppendEntries.h" />
+    <ClInclude Include="Candidate.h" />
+    <ClInclude Include="Follower.h" />
+    <ClInclude Include="Leader.h" />
+    <ClInclude Include="LogEntry.h" />
     <ClInclude Include="Raft.h" />
+    <ClInclude Include="RequestVote.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="ServerState.h" />
+    <ClInclude Include="State.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Raft.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
