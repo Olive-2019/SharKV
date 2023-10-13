@@ -13,6 +13,18 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="头文件\POJO">
+      <UniqueIdentifier>{500ab370-f5bd-45e2-85ba-09f0c070df32}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\State">
+      <UniqueIdentifier>{8f766a8f-a05e-4739-b3ac-740baf21b0d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\State">
+      <UniqueIdentifier>{79e9db4a-01ed-49ac-a582-f8220ff22a52}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\POJO">
+      <UniqueIdentifier>{2a70cbfa-d398-45a4-b875-c1d010824c4b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -21,29 +33,32 @@
     <ClCompile Include="Raft.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="State.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Leader.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Follower.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Candidate.cpp">
+    <ClCompile Include="TimeoutCounter.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="AppendEntries.cpp">
-      <Filter>源文件</Filter>
+      <Filter>源文件\POJO</Filter>
     </ClCompile>
     <ClCompile Include="RequestVote.cpp">
-      <Filter>源文件</Filter>
+      <Filter>源文件\POJO</Filter>
+    </ClCompile>
+    <ClCompile Include="POJO.cpp">
+      <Filter>源文件\POJO</Filter>
     </ClCompile>
     <ClCompile Include="LogEntry.cpp">
-      <Filter>源文件</Filter>
+      <Filter>源文件\POJO</Filter>
     </ClCompile>
-    <ClCompile Include="TimeoutCounter.cpp">
-      <Filter>源文件</Filter>
+    <ClCompile Include="Candidate.cpp">
+      <Filter>源文件\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Follower.cpp">
+      <Filter>源文件\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Leader.cpp">
+      <Filter>源文件\State</Filter>
+    </ClCompile>
+    <ClCompile Include="State.cpp">
+      <Filter>源文件\State</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -53,32 +68,35 @@
     <ClInclude Include="ServerState.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="State.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Leader.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Follower.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Candidate.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="AppendEntries.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="RequestVote.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="LogEntry.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="TimeoutCounter.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="AppendEntries.h">
+      <Filter>头文件\POJO</Filter>
+    </ClInclude>
+    <ClInclude Include="POJO.h">
+      <Filter>头文件\POJO</Filter>
+    </ClInclude>
+    <ClInclude Include="LogEntry.h">
+      <Filter>头文件\POJO</Filter>
+    </ClInclude>
+    <ClInclude Include="RequestVote.h">
+      <Filter>头文件\POJO</Filter>
+    </ClInclude>
+    <ClInclude Include="Candidate.h">
+      <Filter>头文件\State</Filter>
+    </ClInclude>
+    <ClInclude Include="Follower.h">
+      <Filter>头文件\State</Filter>
+    </ClInclude>
+    <ClInclude Include="Leader.h">
+      <Filter>头文件\State</Filter>
+    </ClInclude>
+    <ClInclude Include="State.h">
+      <Filter>头文件\State</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

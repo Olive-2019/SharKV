@@ -133,6 +133,7 @@
     <ClCompile Include="Leader.cpp" />
     <ClCompile Include="LogEntry.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="POJO.cpp" />
     <ClCompile Include="Raft.cpp" />
     <ClCompile Include="RequestVote.cpp" />
     <ClCompile Include="State.cpp" />
@@ -144,6 +145,7 @@
     <ClInclude Include="Follower.h" />
     <ClInclude Include="Leader.h" />
     <ClInclude Include="LogEntry.h" />
+    <ClInclude Include="POJO.h" />
     <ClInclude Include="Raft.h" />
     <ClInclude Include="RequestVote.h" />
     <ClInclude Include="resource.h" />
