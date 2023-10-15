@@ -1,7 +1,5 @@
 #pragma once
 #include "source.h"
-
-
 class POJO
 {
 protected:

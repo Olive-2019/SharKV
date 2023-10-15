@@ -1,8 +1,5 @@
 #pragma once
-#include <string>
-using std::string;
 #include "POJO.h"
-using std::to_string;
 
 class LogEntry : public POJO
 {

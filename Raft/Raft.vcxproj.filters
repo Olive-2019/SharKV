@@ -60,15 +60,15 @@
     <ClCompile Include="State.cpp">
       <Filter>源文件\State</Filter>
     </ClCompile>
+    <ClCompile Include="FileOperator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerAddressReader.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Raft.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="ServerState.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="TimeoutCounter.h">
@@ -97,6 +97,15 @@
     </ClInclude>
     <ClInclude Include="State.h">
       <Filter>头文件\State</Filter>
+    </ClInclude>
+    <ClInclude Include="FileOperator.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerAddressReader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
