@@ -6,7 +6,7 @@ Leader::Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,
 	// 发送心跳
 }
 // 接收RequestVote
-string Leader::requestVote(string requestVoteCodedIntoString) {
+string Leader::requestVote(rpc_conn conn, string requestVoteCodedIntoString) {
 	RequestVote requestVote(requestVoteCodedIntoString);
 	// term没有比当前leader大，可以直接拒绝，并返回当前的term
 	if (requestVote.getTerm() <= currentTerm) return to_string(currentTerm) + " 0";
@@ -15,7 +15,7 @@ string Leader::requestVote(string requestVoteCodedIntoString) {
 	return to_string(currentTerm) + " 1";
 }
 // 接收AppendEntries
-string Leader::appendEntries(string appendEntriesCodedIntoString) {
+string Leader::appendEntries(rpc_conn conn, string appendEntriesCodedIntoString) {
 	AppendEntries appendEntries(appendEntriesCodedIntoString);
 	// term没有比当前leader大，可以直接拒绝，并返回当前的term
 	if (appendEntries.getTerm() <= currentTerm) return to_string(currentTerm) + " 0";

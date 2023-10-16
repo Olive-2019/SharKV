@@ -9,7 +9,7 @@ bool Follower::isNewerThanMe(int lastLogIndex, int lastLogTerm) const {
 	return currentTerm < logEntries.back().getTerm();
 }
 // 接收RequestVote
-string Follower::requestVote(string requestVoteCodedIntoString) {
+string Follower::requestVote(rpc_conn conn, string requestVoteCodedIntoString) {
 	RequestVote requestVote(requestVoteCodedIntoString);
 	//直接返回false：term < currentTerm
 	if (requestVote.getTerm() < currentTerm) return to_string(currentTerm) + " 0";
@@ -22,7 +22,7 @@ string Follower::requestVote(string requestVoteCodedIntoString) {
 	return to_string(currentTerm) + " 0";
 }
 // 接收AppendEntries
-string Follower::appendEntries(string appendEntriesCodedIntoString) {
+string Follower::appendEntries(rpc_conn conn, string appendEntriesCodedIntoString) {
 	AppendEntries appendEntries(appendEntriesCodedIntoString);
 	//直接返回false：term< currentTerm or prevLogIndex/Term对应的log不存在
 	if ((appendEntries.getTerm() < currentTerm) 

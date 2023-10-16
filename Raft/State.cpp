@@ -11,18 +11,38 @@ State::State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWo
 	ServerAddressReader serverAddressReader("AppendEntriesAddress.conf");
 	serverAddress = serverAddressReader.getNetWorkAddresses();
 }
-
+State* State::run() {
+	// 开启计时器
+	timeoutThread = new thread(timeoutCounterThread, this);
+	// 开启AppendEntries
+	appendEntriesThread = new thread(registerAppendEntries, this);
+	// 开启RequestVote
+	requestVoteThread = new thread(registerRequestVote, this);
+	return NULL;
+}
 void State::timeoutCounterThread() {
 	timeoutCounter.run();
 	// 将几个线程里执行的指针置空
+	stop();
 }
 
 // 注册等待接收AppendEntries
 void State::registerAppendEntries() {
-
+	appendEntriesRpcServer.reset(new rpc_server(appendEntriesAddress.second, 6));
+	appendEntriesRpcServer->register_handler("appendEntries", appendEntries);
+	appendEntriesRpcServer->run();//启动服务端
+	cout << "State::registerAppendEntries close AppendEntries" << endl;
 }
 
 // 注册投票线程RequestVote
 void State::registerRequestVote() {
+	requestVoteRpcServer.reset(new rpc_server(requestVoteAddress.second, 6));
+	requestVoteRpcServer->register_handler("requestVote", requestVote);
+	requestVoteRpcServer->run();//启动服务端
+	cout << "State::registerRequestVote close RequestVote" << endl;
+}
 
+void State::stop() {
+	requestVoteRpcServer.reset(nullptr);
+	appendEntriesRpcServer.reset(nullptr);
 }
