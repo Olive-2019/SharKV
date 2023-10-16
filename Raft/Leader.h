@@ -15,5 +15,7 @@ public:
 	string requestVote(rpc_conn conn, string requestVoteCodedIntoString);
 	// 接收AppendEntries
 	string appendEntries(rpc_conn conn, string appendEntriesCodedIntoString);
+	// 运行该机器，返回值是下一个状态
+	State* run();
 };
 

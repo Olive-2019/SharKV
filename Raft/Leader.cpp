@@ -1,7 +1,7 @@
 #include "Leader.h"
 Leader::Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,
 	NetWorkAddress requestVoteAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries) :
-	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, ServerState::Leader, commitIndex, lastApplied, logEntries) {
+	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, commitIndex, lastApplied, logEntries) {
 	
 	// ·¢ËÍĞÄÌø
 }

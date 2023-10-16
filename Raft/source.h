@@ -16,6 +16,3 @@ using std::endl;
 using std::cout;
 using std::vector;
 typedef pair<string, int> NetWorkAddress;
-enum ServerState {
-	Leader, Candidate, Follower
-};

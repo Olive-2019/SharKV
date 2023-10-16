@@ -1,7 +1,7 @@
 #include "Follower.h"
 Follower::Follower(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,
 	NetWorkAddress requestVoteAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries) :
-	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, ServerState::Follower, commitIndex, lastApplied, logEntries)
+	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, commitIndex, lastApplied, logEntries)
 	 { }
 bool Follower::isNewerThanMe(int lastLogIndex, int lastLogTerm) const {
 	if (!logEntries.size()) return true;
@@ -43,4 +43,14 @@ string Follower::appendEntries(rpc_conn conn, string appendEntriesCodedIntoStrin
 		if (commitIndex > logEntries.size() - 1) commitIndex = logEntries.size() - 1;
 	}
 	return to_string(currentTerm) + " 1";
+}
+// 跑起来，转化到下一个状态
+State* Follower::run() {
+	State::run();
+	timeoutThread->join();
+	appendEntriesThread->join();
+	requestVoteThread->join();
+	Candidate* nextState = new Candidate(currentTerm + 1, ID, appendEntriesAddress, 
+		requestVoteAddress, commitIndex, lastApplied, logEntries);
+	return nextState;
 }

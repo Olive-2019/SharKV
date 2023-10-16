@@ -1,8 +1,8 @@
 #include "State.h"
 
 State::State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
-	ServerState state, int commitIndex, int lastApplied, vector<LogEntry> logEntries):
-	currentTerm(currentTerm), ID(ID), appendEntriesAddress(appendEntriesAddress), state(state),
+	 int commitIndex, int lastApplied, vector<LogEntry> logEntries):
+	currentTerm(currentTerm), ID(ID), appendEntriesAddress(appendEntriesAddress),
 	requestVoteAddress(requestVoteAddress), commitIndex(commitIndex), lastApplied(lastApplied), 
 	logEntries(logEntries){
 	// 投票情况置为-1，即谁都没投

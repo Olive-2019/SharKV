@@ -1,7 +1,7 @@
 #include "Candidate.h"
 Candidate::Candidate(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,
 	NetWorkAddress requestVoteAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries) :
-	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, ServerState::Candidate, commitIndex, lastApplied, logEntries), 
+	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, commitIndex, lastApplied, logEntries), 
 	getVote(0){
 	voteResult = vector<int>(serverAddress.size(), 0);
 }
@@ -22,4 +22,8 @@ string Candidate::appendEntries(rpc_conn conn, string appendEntriesCodedIntoStri
 	// term更新，则退出当前状态，返回到Follower的状态
 	// 停止当前节点运行，并转向follower，这里需要多开一个线程，且该线程需要等待一段时间&&detach
 	return to_string(currentTerm) + " 1";
+}
+// 运行该机器，返回值是下一个状态
+State* Candidate::run() {
+
 }

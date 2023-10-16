@@ -1,5 +1,6 @@
 #pragma once
 #include "State.h"
+#include "Candidate.h"
 class Follower : public State
 {
 	bool isNewerThanMe(int lastLogIndex, int lastLogTerm) const;
@@ -10,5 +11,7 @@ public:
 	string requestVote(rpc_conn conn, string requestVoteCodedIntoString);
 	// 接收AppendEntries
 	string appendEntries(rpc_conn conn, string appendEntriesCodedIntoString);
+	// 运行该机器，返回值是下一个状态
+	State* run();
 };
 

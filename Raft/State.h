@@ -32,8 +32,6 @@ protected:
 
 
 	/*易失状态，不需要持久化*/
-	// 当前状态
-	ServerState state;
 	//最大的已经commit的log entries index
 	int commitIndex;
 	//最新加入的log entries index
@@ -59,12 +57,8 @@ protected:
 
 	// 计算超时的线程
 	void timeoutCounterThread();
-	// 等待接收AppendEntries
-	virtual string appendEntries(rpc_conn conn, string appendEntriesCodedIntoString) = 0;
 	// 注册等待接收AppendEntries
 	void registerAppendEntries();
-	// 投票线程RequestVote
-	virtual string requestVote(rpc_conn conn, string requestVoteCodedIntoString) = 0;
 	// 注册投票线程RequestVote
 	void registerRequestVote();
 
@@ -72,7 +66,11 @@ protected:
 	virtual void stop();
 public:
 	State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,NetWorkAddress requestVoteAddress, 
-		ServerState state, int commitIndex, int lastApplied, vector<LogEntry> logEntries);
+	 int commitIndex, int lastApplied, vector<LogEntry> logEntries);
+	// 等待接收AppendEntries
+	virtual string appendEntries(rpc_conn conn, string appendEntriesCodedIntoString) = 0;
+	// 投票线程RequestVote
+	virtual string requestVote(rpc_conn conn, string requestVoteCodedIntoString) = 0;
 	// 运行该机器，返回值是下一个状态
 	virtual State* run();
 };
