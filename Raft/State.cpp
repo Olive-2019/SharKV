@@ -23,7 +23,7 @@ State* State::run() {
 void State::timeoutCounterThread() {
 	timeoutCounter.run();
 	// 将几个线程里执行的指针置空
-	stop();
+	stopThread();
 }
 
 // 注册等待接收AppendEntries
@@ -42,7 +42,12 @@ void State::registerRequestVote() {
 	cout << "State::registerRequestVote close RequestVote" << endl;
 }
 
-void State::stop() {
+void State::stopThread() {
 	requestVoteRpcServer.reset(nullptr);
 	appendEntriesRpcServer.reset(nullptr);
+}
+void State::waitThread() {
+	timeoutThread->join();
+	appendEntriesThread->join();
+	requestVoteThread->join();
 }

@@ -72,6 +72,9 @@
     <ClCompile Include="ServerAddressReader.cpp">
       <Filter>源文件\ORM</Filter>
     </ClCompile>
+    <ClCompile Include="Answer.cpp">
+      <Filter>源文件\POJO</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Raft.h">
@@ -112,6 +115,9 @@
     </ClInclude>
     <ClInclude Include="ServerAddressReader.h">
       <Filter>头文件\ORM</Filter>
+    </ClInclude>
+    <ClInclude Include="Answer.h">
+      <Filter>头文件\POJO</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

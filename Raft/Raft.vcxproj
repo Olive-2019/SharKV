@@ -132,6 +132,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Answer.cpp" />
     <ClCompile Include="AppendEntries.cpp" />
     <ClCompile Include="Candidate.cpp" />
     <ClCompile Include="FileOperator.cpp" />
@@ -147,6 +148,7 @@
     <ClCompile Include="TimeoutCounter.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Answer.h" />
     <ClInclude Include="AppendEntries.h" />
     <ClInclude Include="Candidate.h" />
     <ClInclude Include="FileOperator.h" />

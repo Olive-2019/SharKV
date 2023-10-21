@@ -5,6 +5,7 @@
 #include "ServerAddressReader.h"
 #include "RequestVote.h"
 #include "AppendEntries.h"
+#include "Answer.h"
 #include <thread>
 #include "../rest_rpc/include/rest_rpc.hpp"
 using namespace rest_rpc::rpc_service;
@@ -56,14 +57,16 @@ protected:
 
 
 	// 计算超时的线程
-	void timeoutCounterThread();
+	virtual void timeoutCounterThread();
 	// 注册等待接收AppendEntries
 	void registerAppendEntries();
 	// 注册投票线程RequestVote
 	void registerRequestVote();
 
 	// 停止接收投票和心跳线程
-	virtual void stop();
+	virtual void stopThread();
+	// 等待接收投票和心跳线程join
+	virtual void waitThread();
 public:
 	State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,NetWorkAddress requestVoteAddress, 
 	 int commitIndex, int lastApplied, vector<LogEntry> logEntries);
