@@ -54,7 +54,8 @@ protected:
 	// 用于控制接收RequestVote线程
 	unique_ptr<rpc_server> requestVoteRpcServer;
 
-
+	// 下一个状态
+	State* nextState;
 
 	// 计算超时的线程
 	virtual void timeoutCounterThread();

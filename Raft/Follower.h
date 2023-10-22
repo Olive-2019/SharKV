@@ -5,8 +5,7 @@ class Follower : public State
 {
 	// 比较传入记录和自己哪个更新
 	bool isNewerThanMe(int lastLogIndex, int lastLogTerm) const;
-	// 下一个状态
-	State* nextState;
+	
 	// 计算超时的线程
 	void timeoutCounterThread();
 public:

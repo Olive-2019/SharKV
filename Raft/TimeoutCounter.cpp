@@ -13,16 +13,17 @@ void TimeoutCounter::setReceiveInfoFlag() {
 	receiveInfoFlag = true;
 	flagLock.unlock();
 }
-void TimeoutCounter::run() {
+bool TimeoutCounter::run() {
 	while (!stop) {
 		flagLock.lock();
 		receiveInfoFlag = false;
 		flagLock.unlock();
 		Sleep(electionTimeouts);
 		flagLock.lock();
-		if (!receiveInfoFlag) break;
+		if (!receiveInfoFlag) return true;
 		flagLock.unlock();
 	}
+	return false;
 }
 void TimeoutCounter::stopCounter() {
 	stop = true;
