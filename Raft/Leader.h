@@ -17,8 +17,8 @@ class Leader : public State
 	// TODO:leader的工作内容
 	void work();
 
-	// TODO:发送appendEntries
-	void sendAppendEntries();
+	// 给指定follower发送appendEntries，内容包括[start,end]的内容
+	Answer sendAppendEntries(int followerID,int start, int end);
 	
 public:
 	Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,

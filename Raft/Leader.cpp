@@ -34,6 +34,7 @@ string Leader::requestVote(string requestVoteCodedIntoString) {
 string Leader::appendEntries(string appendEntriesCodedIntoString) {
 	receiveInfoLock.lock();
 	AppendEntries appendEntries(appendEntriesCodedIntoString);
+	// timeoutCounter.setReceiveInfoFlag();
 	// term没有比当前leader大，可以直接拒绝，并返回当前的term
 	if (appendEntries.getTerm() <= currentTerm) {
 		receiveInfoLock.unlock();
@@ -84,4 +85,25 @@ void Leader::work() {
 	while (!nextState) {
 		/*初始化next*/
 	}
+}
+Answer Leader::sendAppendEntries(int followerID, int start, int end) {
+	if (end >= logEntries.size()) throw exception("Leader::sendAppendEntries end is illegal");
+	vector<LogEntry> entries;
+	// 发送的index和term先都初始化为-2，若真的有需要发送的内容再赋值 
+	int prevIndex = -1, prevTerm = -1;
+	if (start >= 0) {
+		prevIndex = start - 1;
+		// 若前一个存在，即现在发的不是第一条
+		if (prevIndex >= 0) prevTerm = logEntries[prevIndex].getTerm();
+		for (int i = start; i <= end; ++i) entries.push_back(logEntries[i]);
+	}
+	// 获取可以传输的字符串
+	string appendEntriesStr = AppendEntries(currentTerm, ID, prevIndex, prevTerm, commitIndex, entries).code();
+	rpc_client client(serverAddress[followerID].first, serverAddress[followerID].second);// IP 地址，端口号
+	/*设定超时 5s（不填默认为 3s），connect 超时返回 false，成功返回 true*/
+	bool has_connected = client.connect(5);
+	/*没有建立连接则退出程序*/
+	if (!has_connected) throw exception("Leader::sendAppendEntries connect timeout");
+	string appendEntriesRes = client.call<string>("appendEntries", appendEntriesStr);
+	return Answer(appendEntriesRes);
 }
