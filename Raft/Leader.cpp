@@ -1,4 +1,5 @@
 #include "Leader.h"
+#include "Follower.h"
 Leader::Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,
 	NetWorkAddress requestVoteAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries) :
 	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, commitIndex, lastApplied, logEntries) {
@@ -12,6 +13,9 @@ string Leader::requestVote(string requestVoteCodedIntoString) {
 	if (requestVote.getTerm() <= currentTerm) return to_string(currentTerm) + " 0";
 	// term更新，则退出当前状态，返回到Follower的状态
 	currentTerm = requestVote.getTerm();
+	nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
+		commitIndex, lastApplied, logEntries);
+	timeoutCounter.stopCounter();
 	
 	// 停止当前节点运行，并转向follower，这里需要多开一个线程，且该线程需要等待一段时间&&detach
 	return to_string(currentTerm) + " 1";

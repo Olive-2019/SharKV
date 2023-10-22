@@ -1,5 +1,5 @@
 #include "State.h"
-
+#include "Candidate.h"
 State::State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
 	 int commitIndex, int lastApplied, vector<LogEntry> logEntries):
 	currentTerm(currentTerm), ID(ID), appendEntriesAddress(appendEntriesAddress),
@@ -21,7 +21,11 @@ State* State::run() {
 	return NULL;
 }
 void State::timeoutCounterThread() {
-	timeoutCounter.run();
+	// 超时返回，转换到candidate
+	if (timeoutCounter.run())
+		nextState = new Candidate(currentTerm + 1, ID, appendEntriesAddress, requestVoteAddress,
+			commitIndex, lastApplied, logEntries);
+	// 未超时，主动返回，将nextState的初始化留给stop的调用处
 	// 将几个线程里执行的指针置空
 	stopThread();
 }
