@@ -14,8 +14,11 @@ class Leader : public State
 	// 用于控制接收AppendEntries线程
 	unique_ptr<rpc_server> startRpcServer;
 
-	// leader的工作内容
+	// TODO:leader的工作内容
 	void work();
+
+	// TODO:发送appendEntries
+	void sendAppendEntries();
 	
 public:
 	Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,

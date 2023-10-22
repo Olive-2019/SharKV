@@ -2,8 +2,10 @@
 #include "Follower.h"
 Leader::Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,
 	NetWorkAddress requestVoteAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries) :
-	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, commitIndex, lastApplied, logEntries) {
-	
+	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, commitIndex, lastApplied, logEntries),
+	nextIndex(serverAddress.size(), logEntries.size()), matchIndex(serverAddress.size(), 0)
+{
+	for ()
 	// 发送心跳
 }
 // 接收RequestVote
@@ -22,6 +24,7 @@ string Leader::requestVote(string requestVoteCodedIntoString) {
 	// 理应在返回结果以后结束掉接收线程，但是此处无法这么处理
 	// 所以用nextState作为信号量，保证线程间同步释放
 	if (nextState && nextState->getCurrentTerm() < currentTerm) delete nextState;
+	// 生成下一状态机
 	nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
 		commitIndex, lastApplied, logEntries);
 	receiveInfoLock.unlock();
@@ -41,6 +44,7 @@ string Leader::appendEntries(string appendEntriesCodedIntoString) {
 	// 将entries添加到当前列表中（调用函数，还需要判断其能否添加，这一步其实已经算是follower的工作了）
 	bool canAppend = appendEntriesReal(appendEntries.getPrevLogIndex(), appendEntries.getPrevLogTerm(),
 		appendEntries.getLeaderCommit(), appendEntries.getEntries());
+	// 生成下一状态机
 	nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
 		commitIndex, lastApplied, logEntries);
 	receiveInfoLock.unlock();
@@ -76,5 +80,8 @@ void Leader::registerStart() {
 
 //给其他所有进程同步log entries
 void Leader::work() {
-	
+	// 用nextState作为同步信号量
+	while (!nextState) {
+		/*初始化next*/
+	}
 }
