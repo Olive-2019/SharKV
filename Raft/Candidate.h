@@ -10,9 +10,9 @@ public:
 	Candidate(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,
 		NetWorkAddress requestVoteAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries);
 	// 接收RequestVote
-	string requestVote(rpc_conn conn, string requestVoteCodedIntoString);
+	string requestVote(string requestVoteCodedIntoString);
 	// 接收AppendEntries
-	string appendEntries(rpc_conn conn, string appendEntriesCodedIntoString);
+	string appendEntries(string appendEntriesCodedIntoString);
 	// 运行该机器，返回值是下一个状态
 	State* run();
 

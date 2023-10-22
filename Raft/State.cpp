@@ -13,11 +13,11 @@ State::State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWo
 }
 State* State::run() {
 	// 开启计时器
-	timeoutThread = new thread(timeoutCounterThread, this);
+	timeoutThread = new thread(&State::timeoutCounterThread, this);
 	// 开启AppendEntries
-	appendEntriesThread = new thread(registerAppendEntries, this);
+	appendEntriesThread = new thread(&State::registerAppendEntries, this);
 	// 开启RequestVote
-	requestVoteThread = new thread(registerRequestVote, this);
+	requestVoteThread = new thread(&State::registerRequestVote, this);
 	return NULL;
 }
 void State::timeoutCounterThread() {
@@ -29,7 +29,11 @@ void State::timeoutCounterThread() {
 // 注册等待接收AppendEntries
 void State::registerAppendEntries() {
 	appendEntriesRpcServer.reset(new rpc_server(appendEntriesAddress.second, 6));
-	appendEntriesRpcServer->register_handler("appendEntries", appendEntries);
+	appendEntriesRpcServer->register_handler("appendEntries", [this](rpc_conn conn,
+		string appendEntriesCodedIntoString) {
+			this->appendEntries(std::move(appendEntriesCodedIntoString));
+		});
+	//appendEntriesRpcServer->register_handler("appendEntries", appendEntries);
 	appendEntriesRpcServer->run();//启动服务端
 	cout << "State::registerAppendEntries close AppendEntries" << endl;
 }
@@ -37,7 +41,11 @@ void State::registerAppendEntries() {
 // 注册投票线程RequestVote
 void State::registerRequestVote() {
 	requestVoteRpcServer.reset(new rpc_server(requestVoteAddress.second, 6));
-	requestVoteRpcServer->register_handler("requestVote", requestVote);
+	requestVoteRpcServer->register_handler("requestVote", [this](rpc_conn conn,
+		string requestVoteCodedIntoString) {
+			this->requestVote(std::move(requestVoteCodedIntoString));
+		});
+	//requestVoteRpcServer->register_handler("requestVote", requestVote);
 	requestVoteRpcServer->run();//启动服务端
 	cout << "State::registerRequestVote close RequestVote" << endl;
 }

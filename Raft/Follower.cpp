@@ -9,7 +9,7 @@ bool Follower::isNewerThanMe(int lastLogIndex, int lastLogTerm) const {
 	return currentTerm < logEntries.back().getTerm();
 }
 // 接收RequestVote
-string Follower::requestVote(rpc_conn conn, string requestVoteCodedIntoString) {
+string Follower::requestVote(string requestVoteCodedIntoString) {
 	RequestVote requestVote(requestVoteCodedIntoString);
 	//直接返回false：term < currentTerm
 	if (requestVote.getTerm() < currentTerm) return Answer(currentTerm, false).code();
@@ -22,7 +22,7 @@ string Follower::requestVote(rpc_conn conn, string requestVoteCodedIntoString) {
 	return Answer(currentTerm, false).code();
 }
 // 接收AppendEntries
-string Follower::appendEntries(rpc_conn conn, string appendEntriesCodedIntoString) {
+string Follower::appendEntries(string appendEntriesCodedIntoString) {
 	AppendEntries appendEntries(appendEntriesCodedIntoString);
 	// 超时计时器计数
 	timeoutCounter.setReceiveInfoFlag();

@@ -71,9 +71,9 @@ public:
 	State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,NetWorkAddress requestVoteAddress, 
 	 int commitIndex, int lastApplied, vector<LogEntry> logEntries);
 	// 等待接收AppendEntries
-	virtual string appendEntries(rpc_conn conn, string appendEntriesCodedIntoString) = 0;
+	virtual string appendEntries(string appendEntriesCodedIntoString) = 0;
 	// 投票线程RequestVote
-	virtual string requestVote(rpc_conn conn, string requestVoteCodedIntoString) = 0;
+	virtual string requestVote(string requestVoteCodedIntoString) = 0;
 	// 运行该机器，返回值是下一个状态
 	virtual State* run();
 };
