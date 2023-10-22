@@ -4,7 +4,7 @@ State::State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWo
 	 int commitIndex, int lastApplied, vector<LogEntry> logEntries):
 	currentTerm(currentTerm), ID(ID), appendEntriesAddress(appendEntriesAddress),
 	requestVoteAddress(requestVoteAddress), commitIndex(commitIndex), lastApplied(lastApplied), 
-	logEntries(logEntries){
+	logEntries(logEntries), nextState(NULL){
 	// 投票情况置为-1，即谁都没投
 	votedFor = -1;
 	// 读入集群中所有server的地址
@@ -62,4 +62,26 @@ void State::waitThread() {
 	timeoutThread->join();
 	appendEntriesThread->join();
 	requestVoteThread->join();
+}
+int State::getCurrentTerm() const {
+	return currentTerm;
+}
+bool State::appendEntriesReal(int prevLogIndex, int prevLogTerm, int leaderCommit, vector<LogEntry> entries) {
+	// 如果prevLogIndex比当前entries列表都大，可以直接返回false了
+	if (prevLogIndex >= logEntries.size()) return false;
+	// 如果prevLogTerm对不上，也可以直接返回false
+	if (logEntries[prevLogIndex].getTerm() != prevLogTerm) return false;
+	// 在对应位置加入entries
+	lastApplied = prevLogIndex + 1;
+	// 覆写
+	for (; lastApplied < logEntries.size() && lastApplied - prevLogIndex - 1 < entries.size(); ++lastApplied) logEntries[lastApplied] = entries[lastApplied - prevLogIndex - 1];
+	// 追加
+	while (lastApplied - prevLogIndex - 1 < entries.size()) {
+		logEntries.push_back(entries[lastApplied - prevLogIndex - 1]);
+		lastApplied++;
+	}
+	// 更新leaderCommit
+	commitIndex = leaderCommit;
+	// 返回执行成功的信息
+	return true;
 }

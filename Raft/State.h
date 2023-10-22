@@ -54,8 +54,10 @@ protected:
 	// 用于控制接收RequestVote线程
 	unique_ptr<rpc_server> requestVoteRpcServer;
 
-	// 下一个状态
+	// 下一个状态，非空说明要进入下一个状态了，马上跳出循环，stop
 	State* nextState;
+	// 接收信息的大锁，进程中同时仅允许处理一条接收的信息，包括appendEntries和requestVote
+	mutex receiveInfoLock;
 
 	// 计算超时的线程
 	virtual void timeoutCounterThread();
@@ -68,9 +70,13 @@ protected:
 	virtual void stopThread();
 	// 等待接收投票和心跳线程join
 	virtual void waitThread();
+	// 添加entries，返回值表示是否成功添加
+	bool appendEntriesReal(int prevLogIndex, int prevLogTerm, int leaderCommit, vector<LogEntry> entries);
 public:
 	State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,NetWorkAddress requestVoteAddress, 
 	 int commitIndex, int lastApplied, vector<LogEntry> logEntries);
+	// 获取当前currentTerm
+	int getCurrentTerm() const;
 	// 等待接收AppendEntries
 	virtual string appendEntries(string appendEntriesCodedIntoString) = 0;
 	// 投票线程RequestVote
