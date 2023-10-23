@@ -1,5 +1,5 @@
 #include "TimeoutCounter.h"
-#include <Windows.h>
+//#include <Windows.h>
 TimeoutCounter::TimeoutCounter() {
 	receiveInfoFlag = false;
 	stop = false;
@@ -18,9 +18,13 @@ bool TimeoutCounter::run() {
 		flagLock.lock();
 		receiveInfoFlag = false;
 		flagLock.unlock();
-		Sleep(electionTimeouts);
+		// Ë¯ÃßÊ±¼äÆ¬
+		sleep_for(seconds(electionTimeouts));
 		flagLock.lock();
-		if (!receiveInfoFlag) return true;
+		if (!receiveInfoFlag) {
+			flagLock.unlock();
+			return true;
+		}
 		flagLock.unlock();
 	}
 	return false;

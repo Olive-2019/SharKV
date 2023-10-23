@@ -21,6 +21,7 @@ class AppendEntries : public POJO
 	// 需要拷贝的多条log entry，心跳信息会是空
 	vector<LogEntry> entries;
 public:
+	AppendEntries() { cout << "when and why need this?" << endl; }
 	AppendEntries(int term, int leaderId, int prevLogIndex, int prevLogTerm, int leaderCommit, vector<LogEntry> entries);
 	// 反序列化
 	AppendEntries(string codedString);

@@ -2,12 +2,28 @@
 #include "Follower.h"
 Leader::Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,
 	NetWorkAddress requestVoteAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries) :
-	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, commitIndex, lastApplied, logEntries),
-	nextIndex(serverAddress.size(), logEntries.size()), matchIndex(serverAddress.size(), 0)
-{
-	for ()
-	// 发送心跳
+	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, commitIndex, lastApplied, logEntries) {
+	// 开启接收start的线程
+	startThread = new thread(&Leader::registerStart, this);
+	// 上任的操作：发送心跳、初始化nextIndex和matchIndex
+	for (auto follower = serverAddress.begin(); follower != serverAddress.end(); ++follower) {
+		if (follower->first == ID) continue;
+		// 初始化next为当前log的最后一个
+		nextIndex[follower->first] = logEntries.size() - 1;
+		// 初始化matchAddress为-1
+		matchIndex[follower->first] = -1;
+		// 发送心跳信息(非阻塞)
+		sendAppendEntries(follower->first, nextIndex[follower->first], nextIndex[follower->first]);
+		
+	}
 }
+Leader::~Leader() {
+	// 将start线程join一下
+	startThread->join();
+	// 释放线程对象
+	delete startThread;
+}
+
 // 接收RequestVote
 string Leader::requestVote(string requestVoteCodedIntoString) {
 	receiveInfoLock.lock();
@@ -45,24 +61,27 @@ string Leader::appendEntries(string appendEntriesCodedIntoString) {
 	// 将entries添加到当前列表中（调用函数，还需要判断其能否添加，这一步其实已经算是follower的工作了）
 	bool canAppend = appendEntriesReal(appendEntries.getPrevLogIndex(), appendEntries.getPrevLogTerm(),
 		appendEntries.getLeaderCommit(), appendEntries.getEntries());
-	// 生成下一状态机
-	nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
-		commitIndex, lastApplied, logEntries);
+	if (!nextState || nextState->getCurrentTerm() <= currentTerm) {
+		delete nextState;
+		// 生成下一状态机
+		nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
+			commitIndex, lastApplied, logEntries);
+	} 
+	
 	receiveInfoLock.unlock();
 	return Answer(currentTerm, canAppend).code();
 }
 State* Leader::run() {
-	State::run();
+	// 主线程处理发送appendEntries，该线程中检测其他线程是否有退出行为
 	work();
-	waitThread();
 	return nextState;
 }
+
 
 void Leader::start(AppendEntries newEntries) {
 	receiveInfoLock.lock();
 	//将client给的数据加入当前列表中
-	merge(logEntries.begin(), logEntries.end(), newEntries.getEntries().begin(),
-		newEntries.getEntries().end(), std::back_inserter(logEntries));
+	for (LogEntry entry : newEntries.getEntries()) logEntries.push_back(entry);
 	// 有新增加的entries，更新lastApplied
 	lastApplied += newEntries.getEntries().size();
 	receiveInfoLock.unlock();
@@ -79,31 +98,100 @@ void Leader::registerStart() {
 	cout << "Leader::registerStart close start" << endl;
 }
 
+
 //给其他所有进程同步log entries
 void Leader::work() {
-	// 用nextState作为同步信号量
+	// 用nextState作为同步信号量,超时/收到更新的信息的时候就可以退出了
 	while (!nextState) {
-		/*初始化next*/
+		// 睡眠一段时间
+		sleep_for(seconds(300));
+		checkFollowers();
+		updateCommit();
 	}
 }
-Answer Leader::sendAppendEntries(int followerID, int start, int end) {
-	if (end >= logEntries.size()) throw exception("Leader::sendAppendEntries end is illegal");
+void Leader::checkFollowers() {
+	// 循环遍历所有的follower，检测其nextIndex是否到最后
+		// 1. 有返回值：
+		//  1.0 返回值term更新，退为follower
+		//	1.1 返回值为true：更新next和match，若next到头就发心跳(心跳的返回还需要再检查)
+		//  1.2 返回值为false：next--，重发一次
+		// 2. 无返回值：重发上一个包 
+	for (auto follower = nextIndex.begin(); follower != nextIndex.end(); ++follower) {
+		int followerID = follower->first;
+		// 无返回值：重发上一个包
+		if (!followerReturnVal[followerID]._Is_ready()) {
+			resendAppendEntries(followerID);
+			continue;
+		}
+		// 有返回值
+		Answer answer(followerReturnVal[followerID].get());
+		// 返回值term更新，退为follower
+		if (answer.getTerm() > currentTerm) {
+			nextState = new Follower(answer.getTerm(), ID, appendEntriesAddress, requestVoteAddress, commitIndex, lastApplied, logEntries);
+			timeoutCounter.stopCounter();
+			return;
+		}
+		// 返回值为true：更新next和match，若next到头就发心跳
+		if (answer.getSuccess()) {
+			// 上一条不是心跳，需要更新next和match
+			if (lastAppendEntries[followerID].getEntries().size()) {
+				nextIndex[followerID] = lastAppendEntries[followerID].getPrevLogIndex()
+					+ lastAppendEntries[followerID].getEntries().size() + 1;
+				matchIndex[followerID] = lastAppendEntries[followerID].getPrevLogIndex()
+					+ lastAppendEntries[followerID].getEntries().size();
+			}
+			// next到头了，需要发送心跳信息
+			if (nextIndex[followerID] >= logEntries.size()) sendAppendEntries(followerID, -1, -1);
+			// next没到头，将后续的都发过去
+			else sendAppendEntries(followerID, nextIndex[followerID], logEntries.size() - 1);
+		}
+		// 返回值为false：next--，重发一次
+		else {
+			// needn't check the heartbreakt, cause if the heartbreak fail, it will be stop at the first one
+			nextIndex[followerID]--;
+			sendAppendEntries(followerID, nextIndex[followerID], nextIndex[followerID]);
+		}
+	}
+}
+void Leader::updateCommit() {
+	// commit超过半数follower可以match的log entries
+	while (commitIndex < logEntries.size()) {
+		int counter = 0;
+		for (auto it = matchIndex.begin(); it != matchIndex.end(); ++it)
+			if (commitIndex + 1 >= it->second) counter++;
+		if (counter > matchIndex.size() / 2) commitIndex++;
+		else break;
+	}
+}
+void Leader::sendAppendEntries(int followerID, int start, int end) {
+	// 下标合法性判断
+	if (end >= logEntries.size() || start > end) throw exception("Leader::sendAppendEntries: index is illegal");
+	// follower id 合法性判断
+	if (followerID < 0 || serverAddress.find(followerID) == serverAddress.end()) throw exception("Leader::sendAppendEntries: followerID is illegal");
+	// 初始化appendEntries的内容
+	int prevTerm = -1, prevIndex = -1;
+	// 日志信息
 	vector<LogEntry> entries;
-	// 发送的index和term先都初始化为-2，若真的有需要发送的内容再赋值 
-	int prevIndex = -1, prevTerm = -1;
+	// 初始化日志信息
 	if (start >= 0) {
 		prevIndex = start - 1;
 		// 若前一个存在，即现在发的不是第一条
 		if (prevIndex >= 0) prevTerm = logEntries[prevIndex].getTerm();
-		for (int i = start; i <= end; ++i) entries.push_back(logEntries[i]);
+		for (int index = start; index <= end; ++index) entries.push_back(logEntries[index]);
 	}
-	// 获取可以传输的字符串
-	string appendEntriesStr = AppendEntries(currentTerm, ID, prevIndex, prevTerm, commitIndex, entries).code();
-	rpc_client client(serverAddress[followerID].first, serverAddress[followerID].second);// IP 地址，端口号
-	/*设定超时 5s（不填默认为 3s），connect 超时返回 false，成功返回 true*/
-	bool has_connected = client.connect(5);
-	/*没有建立连接则退出程序*/
-	if (!has_connected) throw exception("Leader::sendAppendEntries connect timeout");
-	string appendEntriesRes = client.call<string>("appendEntries", appendEntriesStr);
-	return Answer(appendEntriesRes);
+		
+	// 待发送
+	lastAppendEntries[followerID] = AppendEntries(currentTerm, ID, prevIndex, prevTerm, commitIndex, entries);
+	// 异步调用 发送请求
+	followerReturnVal[followerID] = 
+		async(&RPC::invokeRemoteFunc, &rpc, serverAddress[followerID], "appendEntries", lastAppendEntries[followerID].code());
+}
+void Leader::resendAppendEntries(int followerID) {
+	// 异步调用 发送请求
+	followerReturnVal[followerID] =
+		async(&RPC::invokeRemoteFunc, &rpc, serverAddress[followerID], "appendEntries", lastAppendEntries[followerID].code());
+}
+void Leader::stopThread() {
+	State::stopThread();
+	startRpcServer.reset(nullptr);
 }
