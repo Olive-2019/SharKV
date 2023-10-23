@@ -76,11 +76,11 @@ State* Leader::run() {
 	return nextState;
 }
 
+
 void Leader::start(AppendEntries newEntries) {
 	receiveInfoLock.lock();
 	//将client给的数据加入当前列表中
-	merge(logEntries.begin(), logEntries.end(), newEntries.getEntries().begin(),
-		newEntries.getEntries().end(), std::back_inserter(logEntries));
+	for (LogEntry entry : newEntries.getEntries()) logEntries.push_back(entry);
 	// 有新增加的entries，更新lastApplied
 	lastApplied += newEntries.getEntries().size();
 	receiveInfoLock.unlock();
@@ -96,6 +96,7 @@ void Leader::registerStart() {
 	startRpcServer->run();//启动服务端
 	cout << "Leader::registerStart close start" << endl;
 }
+
 
 //给其他所有进程同步log entries
 void Leader::work() {

@@ -32,6 +32,6 @@ string Candidate::appendEntries(string appendEntriesCodedIntoString) {
 }
 // 运行该机器，返回值是下一个状态
 State* Candidate::run() {
-	State::run();
-	return NULL;
+	//State::run();
+	return nextState;
 }

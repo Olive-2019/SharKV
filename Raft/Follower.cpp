@@ -53,7 +53,7 @@ void Follower::timeoutCounterThread() {
 }
 // 跑起来，转化到下一个状态
 State* Follower::run() {
-	State::run();
+	//State::run();
 	//waitThread();
 	return nextState;
 }

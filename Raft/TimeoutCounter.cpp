@@ -21,7 +21,10 @@ bool TimeoutCounter::run() {
 		// Ë¯ÃßÊ±¼äÆ¬
 		sleep_for(seconds(electionTimeouts));
 		flagLock.lock();
-		if (!receiveInfoFlag) return true;
+		if (!receiveInfoFlag) {
+			flagLock.unlock();
+			return true;
+		}
 		flagLock.unlock();
 	}
 	return false;
