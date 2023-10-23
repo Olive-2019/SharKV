@@ -75,6 +75,9 @@
     <ClCompile Include="Answer.cpp">
       <Filter>源文件\POJO</Filter>
     </ClCompile>
+    <ClCompile Include="RPC.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Raft.h">
@@ -118,6 +121,9 @@
     </ClInclude>
     <ClInclude Include="Answer.h">
       <Filter>头文件\POJO</Filter>
+    </ClInclude>
+    <ClInclude Include="RPC.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

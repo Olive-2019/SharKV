@@ -10,23 +10,30 @@ State::State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWo
 	// 读入集群中所有server的地址
 	ServerAddressReader serverAddressReader("AppendEntriesAddress.conf");
 	serverAddress = serverAddressReader.getNetWorkAddresses();
-}
-State* State::run() {
+
 	// 开启计时器
 	timeoutThread = new thread(&State::timeoutCounterThread, this);
 	// 开启AppendEntries
 	appendEntriesThread = new thread(&State::registerAppendEntries, this);
 	// 开启RequestVote
 	requestVoteThread = new thread(&State::registerRequestVote, this);
-	return NULL;
 }
+State::~State() {
+	timeoutThread->join();
+	appendEntriesThread->join();
+	requestVoteThread->join();
+	delete timeoutThread;
+	delete appendEntriesThread;
+	delete requestVoteThread;
+}
+
 void State::timeoutCounterThread() {
 	// 超时返回，转换到candidate
 	if (timeoutCounter.run())
 		nextState = new Candidate(currentTerm + 1, ID, appendEntriesAddress, requestVoteAddress,
 			commitIndex, lastApplied, logEntries);
 	// 未超时，主动返回，将nextState的初始化留给stop的调用处
-	// 将几个线程里执行的指针置空
+	// 将其他的接收线程都停了，这样其他函数可以通过调用停止timeout的函数结束掉其他所有线程
 	stopThread();
 }
 
@@ -49,7 +56,6 @@ void State::registerRequestVote() {
 		string requestVoteCodedIntoString) {
 			this->requestVote(std::move(requestVoteCodedIntoString));
 		});
-	//requestVoteRpcServer->register_handler("requestVote", requestVote);
 	requestVoteRpcServer->run();//启动服务端
 	cout << "State::registerRequestVote close RequestVote" << endl;
 }
@@ -58,23 +64,20 @@ void State::stopThread() {
 	requestVoteRpcServer.reset(nullptr);
 	appendEntriesRpcServer.reset(nullptr);
 }
-void State::waitThread() {
-	timeoutThread->join();
-	appendEntriesThread->join();
-	requestVoteThread->join();
-}
+
 int State::getCurrentTerm() const {
 	return currentTerm;
 }
 bool State::appendEntriesReal(int prevLogIndex, int prevLogTerm, int leaderCommit, vector<LogEntry> entries) {
 	// 如果prevLogIndex比当前entries列表都大，可以直接返回false了
 	if (prevLogIndex >= logEntries.size()) return false;
-	// 如果prevLogTerm对不上，也可以直接返回false
-	if (logEntries[prevLogIndex].getTerm() != prevLogTerm) return false;
+	// 如果prevLogTerm对不上，也可以直接返回false，若prevLogIndex小于0（即-1），则不必检测
+	if (prevLogIndex >= 0 && logEntries[prevLogIndex].getTerm() != prevLogTerm) return false;
 	// 在对应位置加入entries
 	lastApplied = prevLogIndex + 1;
 	// 覆写
-	for (; lastApplied < logEntries.size() && lastApplied - prevLogIndex - 1 < entries.size(); ++lastApplied) logEntries[lastApplied] = entries[lastApplied - prevLogIndex - 1];
+	for (; lastApplied < logEntries.size() && lastApplied - prevLogIndex - 1 < entries.size(); ++lastApplied) 
+		logEntries[lastApplied] = entries[lastApplied - prevLogIndex - 1];
 	// 追加
 	while (lastApplied - prevLogIndex - 1 < entries.size()) {
 		logEntries.push_back(entries[lastApplied - prevLogIndex - 1]);

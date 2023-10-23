@@ -143,6 +143,7 @@
     <ClCompile Include="POJO.cpp" />
     <ClCompile Include="Raft.cpp" />
     <ClCompile Include="RequestVote.cpp" />
+    <ClCompile Include="RPC.cpp" />
     <ClCompile Include="ServerAddressReader.cpp" />
     <ClCompile Include="State.cpp" />
     <ClCompile Include="TimeoutCounter.cpp" />
@@ -158,6 +159,7 @@
     <ClInclude Include="POJO.h" />
     <ClInclude Include="Raft.h" />
     <ClInclude Include="RequestVote.h" />
+    <ClInclude Include="RPC.h" />
     <ClInclude Include="ServerAddressReader.h" />
     <ClInclude Include="source.h" />
     <ClInclude Include="State.h" />

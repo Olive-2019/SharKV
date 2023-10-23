@@ -7,6 +7,7 @@
 #include "AppendEntries.h"
 #include "Answer.h"
 #include <thread>
+#include "RPC.h"
 #include "../rest_rpc/include/rest_rpc.hpp"
 using namespace rest_rpc::rpc_service;
 using std::unique_ptr;
@@ -58,8 +59,10 @@ protected:
 	State* nextState;
 	// 接收信息的大锁，进程中同时仅允许处理一条接收的信息，包括appendEntries和requestVote
 	mutex receiveInfoLock;
+	// 发送rpc信息
+	RPC rpc;
 
-	// 计算超时的线程
+	// 计算超时的线程，结束时会把其他几个接收线程都退出，所以如果想要结束当前所有线程，可以调用结束计时器的函数
 	virtual void timeoutCounterThread();
 	// 注册等待接收AppendEntries
 	void registerAppendEntries();
@@ -68,13 +71,17 @@ protected:
 
 	// 停止接收投票和心跳线程
 	virtual void stopThread();
-	// 等待接收投票和心跳线程join
-	virtual void waitThread();
 	// 添加entries，返回值表示是否成功添加
 	bool appendEntriesReal(int prevLogIndex, int prevLogTerm, int leaderCommit, vector<LogEntry> entries);
+
+
+
 public:
+	// 构造函数完成初始化两个接收线程和计时器线程的任务
 	State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,NetWorkAddress requestVoteAddress, 
 	 int commitIndex, int lastApplied, vector<LogEntry> logEntries);
+	// 析构函数完成线程join和delete掉线程对象的任务
+	~State();
 	// 获取当前currentTerm
 	int getCurrentTerm() const;
 	// 等待接收AppendEntries
@@ -82,6 +89,6 @@ public:
 	// 投票线程RequestVote
 	virtual string requestVote(string requestVoteCodedIntoString) = 0;
 	// 运行该机器，返回值是下一个状态
-	virtual State* run();
+	virtual State* run() = 0;
 };
 

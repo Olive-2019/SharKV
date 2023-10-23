@@ -4,6 +4,7 @@
 #include <exception>
 #include <map>
 #include <sstream>
+#include <future>
 #include <string>
 using std::string;
 using std::to_string;
@@ -15,4 +16,6 @@ using std::cin;
 using std::endl;
 using std::cout;
 using std::vector;
+using std::shared_future;
+using std::async;
 typedef pair<string, int> NetWorkAddress;

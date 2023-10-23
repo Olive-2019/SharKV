@@ -15,11 +15,11 @@ string Candidate::requestVote(string requestVoteCodedIntoString) {
 	return Answer(currentTerm, true).code();
 }
 //candidate超时后会重新选举
-void Candidate::timeoutCounterThread() {
-	timeoutCounter.run();
-	// 将几个线程里执行的指针置空
-	stopThread();
-}
+//void Candidate::timeoutCounterThread() {
+//	timeoutCounter.run();
+//	// 将几个线程里执行的指针置空
+//	stopThread();
+//}
 
 // 接收AppendEntries
 string Candidate::appendEntries(string appendEntriesCodedIntoString) {
