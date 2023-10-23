@@ -22,8 +22,12 @@ class Leader : public State
 	// 用于控制接收AppendEntries线程
 	unique_ptr<rpc_server> startRpcServer;
 
-	// TODO:leader的工作内容
+	// leader的工作内容
 	void work();
+	// 更新commitIndex
+	void updateCommit();
+	// 检测所有follower，重发或新发包
+	void checkFollowers();
 
 	// 给指定ID的follower发送appendEntries，内容为本状态机的[start,end]的内容，若start<0则为空的心跳信息
 	void sendAppendEntries(int followerID, int start, int end);

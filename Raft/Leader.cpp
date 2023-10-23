@@ -62,15 +62,17 @@ string Leader::appendEntries(string appendEntriesCodedIntoString) {
 	// 将entries添加到当前列表中（调用函数，还需要判断其能否添加，这一步其实已经算是follower的工作了）
 	bool canAppend = appendEntriesReal(appendEntries.getPrevLogIndex(), appendEntries.getPrevLogTerm(),
 		appendEntries.getLeaderCommit(), appendEntries.getEntries());
-	// 生成下一状态机
-	nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
-		commitIndex, lastApplied, logEntries);
+	if (!nextState || nextState->getCurrentTerm() <= currentTerm) {
+		delete nextState;
+		// 生成下一状态机
+		nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
+			commitIndex, lastApplied, logEntries);
+	} 
+	
 	receiveInfoLock.unlock();
 	return Answer(currentTerm, canAppend).code();
 }
 State* Leader::run() {
-	// 开一条线程给start
-	thread startThread(&Leader::registerStart, this);
 	// 主线程处理发送appendEntries，该线程中检测其他线程是否有退出行为
 	work();
 	return nextState;
@@ -103,49 +105,63 @@ void Leader::work() {
 	// 用nextState作为同步信号量,超时/收到更新的信息的时候就可以退出了
 	while (!nextState) {
 		// 睡眠一段时间
-		Sleep(300);
-		// 循环遍历所有的follower，检测其nextIndex是否到最后
+		sleep_for(seconds(300));
+		checkFollowers();
+		updateCommit();
+	}
+}
+void Leader::checkFollowers() {
+	// 循环遍历所有的follower，检测其nextIndex是否到最后
 		// 1. 有返回值：
 		//  1.0 返回值term更新，退为follower
 		//	1.1 返回值为true：更新next和match，若next到头就发心跳(心跳的返回还需要再检查)
 		//  1.2 返回值为false：next--，重发一次
 		// 2. 无返回值：重发上一个包 
-		for (auto follower = nextIndex.begin(); follower != nextIndex.end(); ++follower) {
-			int followerID = follower->first;
-			// 无返回值：重发上一个包
-			if (!followerReturnVal[followerID]._Is_ready()) {
-				resendAppendEntries(followerID);
-				continue;
-			}
-			// 有返回值
-			Answer answer(followerReturnVal[followerID].get());
-			// 返回值term更新，退为follower
-			if (answer.getTerm() > currentTerm) {
-				nextState = new Follower(answer.getTerm(), ID, appendEntriesAddress, requestVoteAddress, commitIndex, lastApplied, logEntries);
-				timeoutCounter.stopCounter();
-				return;
-			}
-			// 返回值为true：更新next和match，若next到头就发心跳
-			if (answer.getSuccess()) {
-				// 上一条不是心跳，需要更新next和match
-				if (lastAppendEntries[followerID].getEntries().size()) {
-					nextIndex[followerID] = lastAppendEntries[followerID].getPrevLogIndex()
-						+ lastAppendEntries[followerID].getEntries().size() + 1;
-					matchIndex[followerID] = lastAppendEntries[followerID].getPrevLogIndex()
-						+ lastAppendEntries[followerID].getEntries().size();
-				}
-				// next到头了，需要发送心跳信息
-				if (nextIndex[followerID] >= logEntries.size()) sendAppendEntries(followerID, -1, -1);
-				// next没到头，将后续的都发过去
-				else sendAppendEntries(followerID, nextIndex[followerID], logEntries.size() - 1);
-			}
-			// 返回值为false：next--，重发一次
-			else {
-				// needn't check the heartbreakt, cause if the heartbreak fail, it will be stop at the first one
-				nextIndex[followerID]--;
-				sendAppendEntries(followerID, nextIndex[followerID], nextIndex[followerID]);
-			}
+	for (auto follower = nextIndex.begin(); follower != nextIndex.end(); ++follower) {
+		int followerID = follower->first;
+		// 无返回值：重发上一个包
+		if (!followerReturnVal[followerID]._Is_ready()) {
+			resendAppendEntries(followerID);
+			continue;
 		}
+		// 有返回值
+		Answer answer(followerReturnVal[followerID].get());
+		// 返回值term更新，退为follower
+		if (answer.getTerm() > currentTerm) {
+			nextState = new Follower(answer.getTerm(), ID, appendEntriesAddress, requestVoteAddress, commitIndex, lastApplied, logEntries);
+			timeoutCounter.stopCounter();
+			return;
+		}
+		// 返回值为true：更新next和match，若next到头就发心跳
+		if (answer.getSuccess()) {
+			// 上一条不是心跳，需要更新next和match
+			if (lastAppendEntries[followerID].getEntries().size()) {
+				nextIndex[followerID] = lastAppendEntries[followerID].getPrevLogIndex()
+					+ lastAppendEntries[followerID].getEntries().size() + 1;
+				matchIndex[followerID] = lastAppendEntries[followerID].getPrevLogIndex()
+					+ lastAppendEntries[followerID].getEntries().size();
+			}
+			// next到头了，需要发送心跳信息
+			if (nextIndex[followerID] >= logEntries.size()) sendAppendEntries(followerID, -1, -1);
+			// next没到头，将后续的都发过去
+			else sendAppendEntries(followerID, nextIndex[followerID], logEntries.size() - 1);
+		}
+		// 返回值为false：next--，重发一次
+		else {
+			// needn't check the heartbreakt, cause if the heartbreak fail, it will be stop at the first one
+			nextIndex[followerID]--;
+			sendAppendEntries(followerID, nextIndex[followerID], nextIndex[followerID]);
+		}
+	}
+}
+void Leader::updateCommit() {
+	// commit超过半数follower可以match的log entries
+	while (commitIndex < logEntries.size()) {
+		int counter = 0;
+		for (auto it = matchIndex.begin(); it != matchIndex.end(); ++it)
+			if (commitIndex + 1 >= it->second) counter++;
+		if (counter > matchIndex.size() / 2) commitIndex++;
+		else break;
 	}
 }
 void Leader::sendAppendEntries(int followerID, int start, int end) {

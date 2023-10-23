@@ -4,8 +4,16 @@
 class Candidate : public State
 {
 	// 投票结果 0:没有收到 1：赢得该选票 -1：输了
-	vector<int> voteResult;
-	int getVote;
+	map<int, int> voteResult;
+	//vector<int> voteResult;
+	int getVoteCounter;
+	// 运行检测投票
+	void work();
+	// 发送投票信息
+	void checkRequestVote();
+	
+	// 检测投票结果，只有返回true时知道选举成功，返回false意味着未知数，选举失败靠appendEntries
+	bool checkVoteResult();
 public:
 	Candidate(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,
 		NetWorkAddress requestVoteAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries);
