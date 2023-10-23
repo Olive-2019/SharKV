@@ -1,10 +1,9 @@
 #include "Leader.h"
 #include "Follower.h"
-Leader::Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,
-	NetWorkAddress requestVoteAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries) :
-	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, commitIndex, lastApplied, logEntries) {
-	// 开启接收start的线程
-	startThread = new thread(&Leader::registerStart, this);
+Leader::Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
+	NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries) :
+	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, commitIndex, lastApplied, logEntries) {
+	
 	// 上任的操作：发送心跳、初始化nextIndex和matchIndex
 	for (auto follower = serverAddress.begin(); follower != serverAddress.end(); ++follower) {
 		if (follower->first == ID) continue;
@@ -18,10 +17,7 @@ Leader::Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,
 	}
 }
 Leader::~Leader() {
-	// 将start线程join一下
-	startThread->join();
-	// 释放线程对象
-	delete startThread;
+	
 }
 
 // 接收RequestVote
@@ -86,17 +82,7 @@ void Leader::start(AppendEntries newEntries) {
 	lastApplied += newEntries.getEntries().size();
 	receiveInfoLock.unlock();
 }
-// 注册start函数
-void Leader::registerStart() {
-	startRpcServer.reset(nullptr);
-	startRpcServer.reset(new rpc_server(startAddress.second, 6));
-	startRpcServer->register_handler("start", [this](rpc_conn conn,
-		string newEntries) {
-			this->start(std::move(newEntries));
-		});
-	startRpcServer->run();//启动服务端
-	cout << "Leader::registerStart close start" << endl;
-}
+
 
 
 //给其他所有进程同步log entries

@@ -1,7 +1,7 @@
 #include "Follower.h"
-Follower::Follower(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,
-	NetWorkAddress requestVoteAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries) :
-	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, commitIndex, lastApplied, logEntries) { }
+Follower::Follower(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
+	NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries) :
+	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, commitIndex, lastApplied, logEntries) { }
 bool Follower::isNewerThanMe(int lastLogIndex, int lastLogTerm) const {
 	if (!logEntries.size()) return true;
 	if (logEntries.back().getTerm() == currentTerm) return logEntries.size() < lastLogIndex + 1;
@@ -48,8 +48,8 @@ string Follower::appendEntries(string appendEntriesCodedIntoString) {
 // 计算超时的线程
 void Follower::timeoutCounterThread() {
 	State::timeoutCounterThread();
-	nextState = new Candidate(currentTerm + 1, ID, appendEntriesAddress,
-		requestVoteAddress, commitIndex, lastApplied, logEntries);
+	nextState = new Candidate(currentTerm + 1, ID, appendEntriesAddress, requestVoteAddress,
+		startAddress ,commitIndex, lastApplied, logEntries);
 }
 // 跑起来，转化到下一个状态
 State* Follower::run() {

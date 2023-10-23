@@ -1,9 +1,9 @@
 #include "State.h"
 #include "Candidate.h"
-State::State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
-	 int commitIndex, int lastApplied, vector<LogEntry> logEntries):
+State::State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress, 
+	NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries):
 	currentTerm(currentTerm), ID(ID), appendEntriesAddress(appendEntriesAddress),
-	requestVoteAddress(requestVoteAddress), commitIndex(commitIndex), lastApplied(lastApplied), 
+	requestVoteAddress(requestVoteAddress), startAddress(startAddress), commitIndex(commitIndex), lastApplied(lastApplied),
 	logEntries(logEntries), nextState(NULL){
 	// 投票情况置为-1，即谁都没投
 	votedFor = -1;
@@ -13,15 +13,21 @@ State::State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWo
 
 	// 开启计时器
 	timeoutThread = new thread(&State::timeoutCounterThread, this);
+	// 开启接收start的线程
+	startThread = new thread(&State::registerStart, this);
 	// 开启AppendEntries
 	appendEntriesThread = new thread(&State::registerAppendEntries, this);
 	// 开启RequestVote
 	requestVoteThread = new thread(&State::registerRequestVote, this);
 }
 State::~State() {
+	// 将线程join一下
 	timeoutThread->join();
 	appendEntriesThread->join();
 	requestVoteThread->join();
+	startThread->join();
+	// 释放线程对象
+	delete startThread;
 	delete timeoutThread;
 	delete appendEntriesThread;
 	delete requestVoteThread;
@@ -87,4 +93,23 @@ bool State::appendEntriesReal(int prevLogIndex, int prevLogTerm, int leaderCommi
 	commitIndex = leaderCommit;
 	// 返回执行成功的信息
 	return true;
+}
+// 注册start函数
+void State::registerStart() {
+	startRpcServer.reset(nullptr);
+	startRpcServer.reset(new rpc_server(startAddress.second, 6));
+	startRpcServer->register_handler("start", [this](rpc_conn conn,
+		string newEntries) {
+			this->start(std::move(newEntries));
+		});
+	startRpcServer->run();//启动服务端
+	cout << "Leader::registerStart close start" << endl;
+}
+void State::start(AppendEntries newEntries) {
+	receiveInfoLock.lock();
+	//将client给的数据加入当前列表中
+	for (LogEntry entry : newEntries.getEntries()) logEntries.push_back(entry);
+	// 有新增加的entries，更新lastApplied
+	lastApplied += newEntries.getEntries().size();
+	receiveInfoLock.unlock();
 }

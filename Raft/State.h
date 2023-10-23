@@ -25,6 +25,9 @@ protected:
 	vector<LogEntry> logEntries;
 	//状态机id
 	int ID;
+
+	// 状态机用于接收start的ip和port
+	NetWorkAddress startAddress;
 	// 状态机用于接收appendEntries的ip和port
 	NetWorkAddress appendEntriesAddress;
 	// 状态机用于接收requestVote的ip和port
@@ -44,12 +47,18 @@ protected:
 	TimeoutCounter timeoutCounter;
 	// 计时器线程
 	thread* timeoutThread;
+
+
 	// AppendEntries线程
 	thread* appendEntriesThread;
 	// RequestVote线程
 	thread* requestVoteThread;
+	// 接收start信息的线程指针
+	thread* startThread;
 
 	/*控制线程的智能指针*/
+	// 用于控制接收AppendEntries线程
+	unique_ptr<rpc_server> startRpcServer;
 	// 用于控制接收AppendEntries线程
 	unique_ptr<rpc_server> appendEntriesRpcServer;
 	// 用于控制接收RequestVote线程
@@ -64,6 +73,9 @@ protected:
 
 	// 计算超时的线程，结束时会把其他几个接收线程都退出，所以如果想要结束当前所有线程，可以调用结束计时器的函数
 	virtual void timeoutCounterThread();
+	
+	// 注册start函数
+	void registerStart();
 	// 注册等待接收AppendEntries
 	void registerAppendEntries();
 	// 注册投票线程RequestVote
@@ -79,11 +91,13 @@ protected:
 public:
 	// 构造函数完成初始化两个接收线程和计时器线程的任务
 	State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,NetWorkAddress requestVoteAddress, 
-	 int commitIndex, int lastApplied, vector<LogEntry> logEntries);
+		NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries);
 	// 析构函数完成线程join和delete掉线程对象的任务
 	~State();
 	// 获取当前currentTerm
 	int getCurrentTerm() const;
+	// start调用，leader和candidate添加一条新的entries，follower转发给leader
+	virtual void start(AppendEntries newEntries);
 	// 等待接收AppendEntries
 	virtual string appendEntries(string appendEntriesCodedIntoString) = 0;
 	// 投票线程RequestVote

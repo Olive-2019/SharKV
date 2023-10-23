@@ -12,15 +12,9 @@ class Leader : public State
 	// 记录上一个包，方便重发
 	map<int, AppendEntries> lastAppendEntries;
 
-	// 状态机用于接收start的ip和port
-	NetWorkAddress startAddress;
+	
 
-	// 接收start信息的线程指针
-	thread* startThread;
-
-	/*控制线程的智能指针*/
-	// 用于控制接收AppendEntries线程
-	unique_ptr<rpc_server> startRpcServer;
+	
 
 	// leader的工作内容
 	void work();
@@ -37,18 +31,14 @@ class Leader : public State
 	void stopThread();
 	
 public:
-	Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,
-		NetWorkAddress requestVoteAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries);
+	Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
+		NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries);
 	// 析构函数完成线程join和delete掉线程对象的任务
 	~Leader();
 	// 接收RequestVote
 	string requestVote(string requestVoteCodedIntoString);
 	// 接收AppendEntries
 	string appendEntries(string appendEntriesCodedIntoString);
-	// start调用，添加一条新的entries
-	void start(AppendEntries newEntries);
-	// 注册start函数
-	void registerStart();
 	// 运行该机器，返回值是下一个状态
 	State* run();
 };

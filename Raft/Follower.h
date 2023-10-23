@@ -9,8 +9,8 @@ class Follower : public State
 	// 计算超时的线程
 	void timeoutCounterThread();
 public:
-	Follower(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,
-		NetWorkAddress requestVoteAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries);
+	Follower(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
+		NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries);
 	// 接收RequestVote
 	string requestVote(string requestVoteCodedIntoString);
 	// 接收AppendEntries
