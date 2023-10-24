@@ -12,7 +12,7 @@ State::State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWo
 	serverAddress = serverAddressReader.getNetWorkAddresses();
 
 	// 开启计时器
-	timeoutThread = new thread(&State::timeoutCounterThread, this);
+	timeoutThread = NULL;//new thread(&State::timeoutCounterThread, this);
 	// 开启接收start的线程
 	startThread = new thread(&State::registerStart, this);
 	// 开启AppendEntries
@@ -22,13 +22,13 @@ State::State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWo
 }
 State::~State() {
 	// 将线程join一下
-	timeoutThread->join();
+	// timeoutThread->join();
 	appendEntriesThread->join();
 	requestVoteThread->join();
 	startThread->join();
 	// 释放线程对象
 	delete startThread;
-	delete timeoutThread;
+	// delete timeoutThread;
 	delete appendEntriesThread;
 	delete requestVoteThread;
 }
@@ -37,7 +37,7 @@ void State::timeoutCounterThread() {
 	// 超时返回，转换到candidate
 	if (timeoutCounter.run())
 		nextState = new Candidate(currentTerm + 1, ID, appendEntriesAddress, requestVoteAddress,
-			commitIndex, lastApplied, logEntries);
+			startAddress, commitIndex, lastApplied, logEntries);
 	// 未超时，主动返回，将nextState的初始化留给stop的调用处
 	// 将其他的接收线程都停了，这样其他函数可以通过调用停止timeout的函数结束掉其他所有线程
 	stopThread();
@@ -58,8 +58,7 @@ void State::registerAppendEntries() {
 // 注册投票线程RequestVote
 void State::registerRequestVote() {
 	requestVoteRpcServer.reset(new rpc_server(requestVoteAddress.second, 6));
-	requestVoteRpcServer->register_handler("requestVote", [this](rpc_conn conn,
-		string requestVoteCodedIntoString) {
+	requestVoteRpcServer->register_handler("requestVote", [this](rpc_conn conn, string requestVoteCodedIntoString) {
 			this->requestVote(std::move(requestVoteCodedIntoString));
 		});
 	requestVoteRpcServer->run();//启动服务端
@@ -69,6 +68,7 @@ void State::registerRequestVote() {
 void State::stopThread() {
 	requestVoteRpcServer.reset(nullptr);
 	appendEntriesRpcServer.reset(nullptr);
+	startRpcServer.reset(nullptr);
 }
 
 int State::getCurrentTerm() const {
@@ -98,10 +98,9 @@ bool State::appendEntriesReal(int prevLogIndex, int prevLogTerm, int leaderCommi
 void State::registerStart() {
 	startRpcServer.reset(nullptr);
 	startRpcServer.reset(new rpc_server(startAddress.second, 6));
-	startRpcServer->register_handler("start", [this](rpc_conn conn,
-		string newEntries) {
+	startRpcServer->register_handler("start", [this](rpc_conn conn, string newEntries) {
 			this->start(std::move(newEntries));
-		});
+	});
 	startRpcServer->run();//启动服务端
 	cout << "Leader::registerStart close start" << endl;
 }

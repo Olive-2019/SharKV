@@ -1,14 +1,26 @@
 #include "Follower.h"
 Follower::Follower(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
 	NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries) :
-	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, commitIndex, lastApplied, logEntries) { }
+	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, commitIndex, lastApplied, logEntries) {
+	// 开启计时器
+	timeoutThread = new thread(&State::timeoutCounterThread, this);
+}
+Follower::~Follower() {
+	timeoutThread->join();
+	delete timeoutThread;
+}
 bool Follower::isNewerThanMe(int lastLogIndex, int lastLogTerm) const {
 	if (!logEntries.size()) return true;
 	if (logEntries.back().getTerm() == currentTerm) return logEntries.size() < lastLogIndex + 1;
 	return currentTerm < logEntries.back().getTerm();
 }
+void Follower::start(AppendEntries newEntries) {
+	// 转发给leader
+	rpc.invokeRemoteFunc(serverAddress[leaderID], "start", newEntries.code());
+}
 // 接收RequestVote
 string Follower::requestVote(string requestVoteCodedIntoString) {
+	receiveInfoLock.lock();
 	RequestVote requestVote(requestVoteCodedIntoString);
 	//直接返回false：term < currentTerm
 	if (requestVote.getTerm() < currentTerm) return Answer(currentTerm, false).code();
@@ -16,21 +28,29 @@ string Follower::requestVote(string requestVoteCodedIntoString) {
 	if ((votedFor < 0 || votedFor == requestVote.getCandidateId())
 		&& isNewerThanMe(requestVote.getLastLogIndex(), requestVote.getLastLogTerm())) {
 		votedFor = requestVote.getCandidateId();
+		receiveInfoLock.unlock();
 		return Answer(currentTerm, true).code();
 	}
+	receiveInfoLock.unlock();
 	return Answer(currentTerm, false).code();
 }
 // 接收AppendEntries
 string Follower::appendEntries(string appendEntriesCodedIntoString) {
+	receiveInfoLock.lock();
 	AppendEntries appendEntries(appendEntriesCodedIntoString);
 	// 超时计时器计数
 	timeoutCounter.setReceiveInfoFlag();
 	//直接返回false：term < currentTerm or prevLogIndex/Term对应的log不存在
-	if ((appendEntries.getTerm() < currentTerm) 
+	if ((appendEntries.getTerm() < currentTerm)
 		|| appendEntries.getPrevLogIndex() >= logEntries.size()
-		|| logEntries[appendEntries.getPrevLogIndex()].getTerm() != appendEntries.getTerm())
+		|| logEntries[appendEntries.getPrevLogIndex()].getTerm() != appendEntries.getTerm()) {
+		receiveInfoLock.unlock();
 		return Answer(currentTerm, false).code();
+	}
+		
 	int index = appendEntries.getPrevLogIndex() + 1;
+	// 更新leaderID
+	leaderID = appendEntries.getLeaderId();
 	for (LogEntry entry : appendEntries.getEntries()) {
 		//存在冲突entry，即相同的index，不同的term（就是leader没有的数据），删掉现有的entries并写入leader给的数据
 		if (index < logEntries.size()) logEntries[index] = entry;
@@ -43,14 +63,10 @@ string Follower::appendEntries(string appendEntriesCodedIntoString) {
 		commitIndex = appendEntries.getLeaderCommit();
 		if (commitIndex > logEntries.size() - 1) commitIndex = logEntries.size() - 1;
 	}
+	receiveInfoLock.unlock();
 	return Answer(currentTerm, true).code();
 }
-// 计算超时的线程
-void Follower::timeoutCounterThread() {
-	State::timeoutCounterThread();
-	nextState = new Candidate(currentTerm + 1, ID, appendEntriesAddress, requestVoteAddress,
-		startAddress ,commitIndex, lastApplied, logEntries);
-}
+
 // 跑起来，转化到下一个状态
 State* Follower::run() {
 	//State::run();

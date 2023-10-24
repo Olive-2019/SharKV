@@ -45,10 +45,8 @@ protected:
 	/*运行过程中需要用到的变量*/
 	// 用于计算超时的类
 	TimeoutCounter timeoutCounter;
-	// 计时器线程
+	// 计时器线程(leader不运行)
 	thread* timeoutThread;
-
-
 	// AppendEntries线程
 	thread* appendEntriesThread;
 	// RequestVote线程

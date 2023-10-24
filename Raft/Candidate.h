@@ -23,6 +23,7 @@ class Candidate : public State
 public:
 	Candidate(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
 		NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries);
+	~Candidate();
 	// 接收RequestVote
 	string requestVote(string requestVoteCodedIntoString);
 	// 接收AppendEntries

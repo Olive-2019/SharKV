@@ -13,7 +13,6 @@ Leader::Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, Net
 		matchIndex[follower->first] = -1;
 		// 发送心跳信息(非阻塞)
 		sendAppendEntries(follower->first, nextIndex[follower->first], nextIndex[follower->first]);
-		
 	}
 }
 Leader::~Leader() {
@@ -38,7 +37,7 @@ string Leader::requestVote(string requestVoteCodedIntoString) {
 	if (nextState && nextState->getCurrentTerm() < currentTerm) delete nextState;
 	// 生成下一状态机
 	nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
-		commitIndex, lastApplied, logEntries);
+		startAddress, commitIndex, lastApplied, logEntries);
 	receiveInfoLock.unlock();
 	return Answer(currentTerm, true).code();
 }
@@ -61,7 +60,7 @@ string Leader::appendEntries(string appendEntriesCodedIntoString) {
 		delete nextState;
 		// 生成下一状态机
 		nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
-			commitIndex, lastApplied, logEntries);
+			startAddress, commitIndex, lastApplied, logEntries);
 	} 
 	
 	receiveInfoLock.unlock();
@@ -74,14 +73,7 @@ State* Leader::run() {
 }
 
 
-void Leader::start(AppendEntries newEntries) {
-	receiveInfoLock.lock();
-	//将client给的数据加入当前列表中
-	for (LogEntry entry : newEntries.getEntries()) logEntries.push_back(entry);
-	// 有新增加的entries，更新lastApplied
-	lastApplied += newEntries.getEntries().size();
-	receiveInfoLock.unlock();
-}
+
 
 
 

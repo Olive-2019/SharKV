@@ -13,8 +13,13 @@ Candidate::Candidate(int currentTerm, int ID, NetWorkAddress appendEntriesAddres
 		if (followerID == ID) continue;
 		voteResult[followerID] = 0;
 		sendRequestVote(followerID);
-		
 	}
+	// 开启计时器
+	timeoutThread = new thread(&State::timeoutCounterThread, this);
+}
+Candidate::~Candidate() {
+	timeoutThread->join();
+	delete timeoutThread;
 }
 // 接收RequestVote，不需要重置计时器，leader中计时器只运行一段
 string Candidate::requestVote(string requestVoteCodedIntoString) {
