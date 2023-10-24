@@ -1,17 +1,11 @@
 #include "State.h"
 #include "Candidate.h"
 State::State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress, 
-	NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries):
-	currentTerm(currentTerm), ID(ID), appendEntriesAddress(appendEntriesAddress),
+	NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor):
+	currentTerm(currentTerm), ID(ID), appendEntriesAddress(appendEntriesAddress), votedFor(votedFor), 
 	requestVoteAddress(requestVoteAddress), startAddress(startAddress), commitIndex(commitIndex), lastApplied(lastApplied),
-	logEntries(logEntries), nextState(NULL){
-	// 投票情况置为-1，即谁都没投
-	votedFor = -1;
-	// 读入集群中所有server的地址
-	ServerAddressReader serverAddressReader("AppendEntriesAddress.conf");
-	serverAddress = serverAddressReader.getNetWorkAddresses();
-
-	
+	logEntries(logEntries), nextState(NULL), debug(false){
+	setDebug();
 	// 开启接收start的线程
 	startThread = new thread(&State::registerStart, this);
 	// 开启AppendEntries

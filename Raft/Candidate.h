@@ -31,7 +31,7 @@ class Candidate : public State
 	
 public:
 	Candidate(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
-		NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries);
+		NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor = -1);
 	~Candidate();
 	// Ω” ’RequestVote
 	string requestVote(string requestVoteCodedIntoString);

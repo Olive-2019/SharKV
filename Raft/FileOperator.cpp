@@ -15,3 +15,22 @@ void FileOperator::openFile(std::ios_base::openmode openMode) {
 	if (fileHandle.is_open()) fileHandle.close();
 	fileHandle.open(filePath.c_str(), openMode);
 }
+// 检测是否存在文件
+bool FileOperator::isExistFile() {
+	ifstream f(filePath.c_str());
+	return f.good();
+}
+// append写一行
+void FileOperator::appendOneRow(string content) {
+	openFile(std::ios::app);
+	content += "\n";
+	fileHandle.write(content.c_str(), content.size());
+	fileHandle.close();
+}
+// 新写一行
+void FileOperator::writeOneRow(string content) {
+	openFile(std::ios::out);
+	content += "\n";
+	fileHandle.write(content.c_str(), content.size());
+	fileHandle.close();
+}

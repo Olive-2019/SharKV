@@ -2,9 +2,13 @@
 #include "Follower.h"
 #include "Leader.h"
 Candidate::Candidate(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
-	NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries) :
-	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, commitIndex, lastApplied, logEntries), getVoteCounter(1)
-	 {
+	NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor) :
+	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, commitIndex, lastApplied, logEntries, votedFor), 
+	getVoteCounter(1) {
+	if (debug) cout << endl << ID << " become Candidate" << endl;
+	// 读入集群中所有server的地址，candidate读入RequestVoteAddress的地址
+	ServerAddressReader serverAddressReader("RequestVoteAddress.conf");
+	serverAddress = serverAddressReader.getNetWorkAddresses();
 	// 给自己投票
 	votedFor = ID;
 	// 初始化voteResult，并发送请求投票信息
@@ -22,10 +26,12 @@ Candidate::~Candidate() {
 	timeoutThread->join();
 	// 释放对象
 	delete timeoutThread;
+	if (debug) cout << ID << " will not be Candidate any more." << endl;
 }
 // 接收RequestVote，不需要重置计时器，leader中计时器只运行一段
 string Candidate::requestVote(string requestVoteCodedIntoString) {
 	receiveInfoLock.lock();
+	if (debug) cout << ID << " receive requestVote Msg" << endl;
 	RequestVote requestVote(requestVoteCodedIntoString);
 	// term没有比当前Candidate大，可以直接拒绝，并返回当前的term
 	if (requestVote.getTerm() <= currentTerm) {
@@ -57,6 +63,7 @@ void Candidate::timeoutCounterThread() {
 // 只要对方的term不比自己小就接受对方为leader
 string Candidate::appendEntries(string appendEntriesCodedIntoString) {
 	receiveInfoLock.lock();
+	if (debug) cout << ID << " receive appendEntries Msg" << endl;
 	AppendEntries appendEntries(appendEntriesCodedIntoString);
 	// term没有比当前Candidate大，可以直接拒绝，并返回当前的term
 	if (appendEntries.getTerm() < currentTerm) {
@@ -111,6 +118,8 @@ void Candidate::sendRequestVote(int followerID) {
 	RequestVote requestVoteContent(currentTerm, ID, logEntries.size() - 1, logEntries.size() ? logEntries.back().getTerm() : -1);
 	followerReturnVal[followerID] =
 		async(&RPC::invokeRemoteFunc, &rpc, serverAddress[followerID], "requestVote", requestVoteContent.code());
+	if (debug) cout << "send requestVote to " << followerID << endl;
+
 }
 // 检测投票结果
 bool Candidate::checkVoteResult() {
@@ -120,7 +129,7 @@ bool Candidate::checkVoteResult() {
 
 void Candidate::work() {
 	while (!nextState) {
-		sleep_for(seconds(300));
+		sleep_for(seconds(5));
 		if (checkRequestVote()) {
 			// 没有决出胜负，重开
 			nextState = new Candidate(currentTerm + 1, ID, appendEntriesAddress, requestVoteAddress,

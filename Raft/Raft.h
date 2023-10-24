@@ -3,6 +3,7 @@
 #include "Follower.h"
 #include "Leader.h"
 #include "Candidate.h"
+#include "PersistenceInfoReaderAndWriter.h"
 class Raft
 {
 	

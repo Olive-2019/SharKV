@@ -81,21 +81,29 @@ protected:
 	// 主线程 leader和candidate发东西，follower守护
 	virtual void work() = 0;
 
-
+	// debug输出开关
+	bool debug;
 public:
 	// 构造函数完成初始化两个接收线程和计时器线程的任务
 	State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,NetWorkAddress requestVoteAddress, 
-		NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries);
+		NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor = -1);
 	// 析构函数完成线程join和delete掉线程对象的任务
 	~State();
+
+	// 开启debug模式
+	void setDebug() { debug = true; };
 	// 获取当前currentTerm
 	int getCurrentTerm() const;
+
 	// start调用，leader和candidate添加一条新的entries，follower转发给leader
 	virtual void start(AppendEntries newEntries);
+
 	// 等待接收AppendEntries
 	virtual string appendEntries(string appendEntriesCodedIntoString) = 0;
+
 	// 投票线程RequestVote
 	virtual string requestVote(string requestVoteCodedIntoString) = 0;
+
 	// 运行该机器，返回值是下一个状态
 	virtual State* run();
 };

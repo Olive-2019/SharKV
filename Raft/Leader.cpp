@@ -1,9 +1,15 @@
 #include "Leader.h"
 #include "Follower.h"
 Leader::Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
-	NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries) :
-	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, commitIndex, lastApplied, logEntries) {
+	NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor) :
+	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, commitIndex, lastApplied, logEntries, votedFor) {
 	
+	if (debug) cout << endl << ID << " become Leader" << endl;
+
+	// 读入集群中所有server的地址，leader读入AppendEntriesAddress的地址
+	ServerAddressReader serverAddressReader("AppendEntriesAddress.conf");
+	
+	serverAddress = serverAddressReader.getNetWorkAddresses();
 	// 上任的操作：发送心跳、初始化nextIndex和matchIndex
 	for (auto follower = serverAddress.begin(); follower != serverAddress.end(); ++follower) {
 		if (follower->first == ID) continue;
@@ -16,17 +22,18 @@ Leader::Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, Net
 	}
 }
 Leader::~Leader() {
-	
+	if (debug) cout << ID << " will not be Leader any more." << endl;
 }
 
 // 接收RequestVote
 string Leader::requestVote(string requestVoteCodedIntoString) {
 	receiveInfoLock.lock();
-	
+	if (debug) cout << ID << " receive requestVote Msg" << endl;
 	RequestVote requestVote(requestVoteCodedIntoString);
 	// term没有比当前leader大，可以直接拒绝，并返回当前的term
 	if (requestVote.getTerm() <= currentTerm) {
 		receiveInfoLock.unlock();
+		if (debug) cout << "reject " << requestVote.getCandidateId() << ", cause its term is old." << endl;
 		return Answer(currentTerm, false).code();
 	}
 	// term更新，则退出当前状态，返回到Follower的状态
@@ -37,18 +44,21 @@ string Leader::requestVote(string requestVoteCodedIntoString) {
 	if (nextState && nextState->getCurrentTerm() < currentTerm) delete nextState;
 	// 生成下一状态机
 	nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
-		startAddress, commitIndex, lastApplied, logEntries);
+		startAddress, commitIndex, lastApplied, logEntries, votedFor = requestVote.getCandidateId());
 	receiveInfoLock.unlock();
+	if (debug) cout << "vote for " << requestVote.getCandidateId() << "." << endl;
 	return Answer(currentTerm, true).code();
 }
 // 接收AppendEntries
 string Leader::appendEntries(string appendEntriesCodedIntoString) {
 	receiveInfoLock.lock();
+	if (debug) cout << ID << " receive appendEntries Msg" << endl;
 	AppendEntries appendEntries(appendEntriesCodedIntoString);
 	// timeoutCounter.setReceiveInfoFlag();
 	// term没有比当前leader大，可以直接拒绝，并返回当前的term
 	if (appendEntries.getTerm() <= currentTerm) {
 		receiveInfoLock.unlock();
+		if (debug) cout << "reject " << appendEntries.getLeaderId() << "'s appendEntries, cause its term is old." << endl;
 		return Answer(currentTerm, false).code();
 	}
 	// term更新，则退出当前状态，返回到Follower的状态
@@ -141,13 +151,15 @@ void Leader::sendAppendEntries(int followerID, int start, int end) {
 	// 待发送
 	lastAppendEntries[followerID] = AppendEntries(currentTerm, ID, prevIndex, prevTerm, commitIndex, entries);
 	// 异步调用 发送请求
-	followerReturnVal[followerID] = 
-		async(&RPC::invokeRemoteFunc, &rpc, serverAddress[followerID], "appendEntries", lastAppendEntries[followerID].code());
+	resendAppendEntries(followerID);
+	
 }
 void Leader::resendAppendEntries(int followerID) {
+	if (serverAddress.find(followerID) == serverAddress.end()) throw exception("Leader::resendAppendEntries follower doesn't exist.");
 	// 异步调用 发送请求
 	followerReturnVal[followerID] =
 		async(&RPC::invokeRemoteFunc, &rpc, serverAddress[followerID], "appendEntries", lastAppendEntries[followerID].code());
+	if (debug) cout << "send appendEntries to " << followerID << endl;
 }
 
 //给其他所有进程同步log entries
@@ -155,7 +167,7 @@ void Leader::work() {
 	// 用nextState作为同步信号量,超时/收到更新的信息的时候就可以退出了
 	while (!nextState) {
 		// 睡眠一段时间
-		sleep_for(seconds(300));
+		sleep_for(seconds(5));
 		checkFollowers();
 		updateCommit();
 	}
