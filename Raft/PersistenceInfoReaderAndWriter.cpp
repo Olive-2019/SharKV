@@ -1,10 +1,7 @@
 #include "PersistenceInfoReaderAndWriter.h"
 PersistenceInfoReaderAndWriter::PersistenceInfoReaderAndWriter(int serverID) :
-	filePath("RaftPersistance"+to_string(serverID)), FileOperator(filePath) {
-	// 如果当前id的文件存在则读出
-	
-	// 如果当前id对应的持久化文件不存在，则写入
-	
+	FileOperator("RaftPersistance"+to_string(serverID)) {
+
 }
 void PersistenceInfoReaderAndWriter::setCurrentTerm(int currentTerm) {
 	this->currentTerm = currentTerm;

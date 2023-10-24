@@ -3,7 +3,6 @@
 #include "LogEntry.h"
 class PersistenceInfoReaderAndWriter :
     public FileOperator {
-    string filePath;
     int currentTerm;
     int votedFor;
     vector<LogEntry> entries;

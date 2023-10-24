@@ -53,9 +53,13 @@ string Candidate::requestVote(string requestVoteCodedIntoString) {
 
 void Candidate::timeoutCounterThread() {
 	// 超时返回，转换到candidate
-	if (timeoutCounter.run())
+	if (timeoutCounter.run()) {
 		nextState = new Candidate(currentTerm + 1, ID, appendEntriesAddress, requestVoteAddress,
 			startAddress, commitIndex, lastApplied, logEntries);
+		if (debug) cout << "Candidate " << ID << " timeout and quit." << endl;
+	}
+	else if (debug) cout << "Candidate " << ID << " quit." << endl;
+		
 	// 未超时，主动返回，将nextState的初始化留给stop的调用处
 }
 
@@ -129,8 +133,8 @@ bool Candidate::checkVoteResult() {
 
 void Candidate::work() {
 	while (!nextState) {
-		sleep_for(seconds(5));
-		if (checkRequestVote()) {
+		sleep_for(seconds(15));
+		if (!checkRequestVote()) {
 			// 没有决出胜负，重开
 			nextState = new Candidate(currentTerm + 1, ID, appendEntriesAddress, requestVoteAddress,
 				startAddress, commitIndex, lastApplied, logEntries);

@@ -27,7 +27,12 @@ int main(int argc, char* argv[]) {
 	}
 	
 	Raft raft;
-	raft.run(serverID, addresses[0], addresses[1], addresses[2]);
+	try {
+		raft.run(serverID, addresses[0], addresses[1], addresses[2]);
+	}
+	catch (exception e) {
+		cout << e.what() << endl;
+	}
 	
 	return 0;
 }

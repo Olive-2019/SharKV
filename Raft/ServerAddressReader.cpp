@@ -14,7 +14,8 @@ pair<int, NetWorkAddress> ServerAddressReader::getOneNetWorkAddress() {
 map<int, NetWorkAddress> ServerAddressReader::getNetWorkAddresses() {
 	openFile(std::ios::in);
 	map<int, NetWorkAddress> IDToNetWorkAddress;
-	while (isEnd()) {
+	
+	while (!isEnd()) {
 		pair<int, NetWorkAddress> oneAddress = getOneNetWorkAddress();
 		IDToNetWorkAddress.insert(oneAddress);
 	}

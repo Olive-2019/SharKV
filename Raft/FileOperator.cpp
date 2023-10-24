@@ -14,6 +14,7 @@ bool FileOperator::isEnd() const {
 void FileOperator::openFile(std::ios_base::openmode openMode) {
 	if (fileHandle.is_open()) fileHandle.close();
 	fileHandle.open(filePath.c_str(), openMode);
+	if (!fileHandle.is_open()) throw exception("FileOperator::openFile can't openFile");
 }
 // 检测是否存在文件
 bool FileOperator::isExistFile() {
