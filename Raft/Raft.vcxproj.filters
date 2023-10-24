@@ -78,6 +78,9 @@
     <ClCompile Include="RPC.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="PersistenceInfoReaderAndWriter.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Raft.h">
@@ -123,6 +126,9 @@
       <Filter>头文件\POJO</Filter>
     </ClInclude>
     <ClInclude Include="RPC.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="PersistenceInfoReaderAndWriter.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

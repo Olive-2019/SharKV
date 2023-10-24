@@ -140,6 +140,7 @@
     <ClCompile Include="Leader.cpp" />
     <ClCompile Include="LogEntry.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="PersistenceInfoReaderAndWriter.cpp" />
     <ClCompile Include="POJO.cpp" />
     <ClCompile Include="Raft.cpp" />
     <ClCompile Include="RequestVote.cpp" />
@@ -156,6 +157,7 @@
     <ClInclude Include="Follower.h" />
     <ClInclude Include="Leader.h" />
     <ClInclude Include="LogEntry.h" />
+    <ClInclude Include="PersistenceInfoReaderAndWriter.h" />
     <ClInclude Include="POJO.h" />
     <ClInclude Include="Raft.h" />
     <ClInclude Include="RequestVote.h" />
