@@ -43,10 +43,7 @@ protected:
 	int lastApplied;
 	
 	/*运行过程中需要用到的变量*/
-	// 用于计算超时的类
-	TimeoutCounter timeoutCounter;
-	// 计时器线程(leader不运行)
-	thread* timeoutThread;
+	
 	// AppendEntries线程
 	thread* appendEntriesThread;
 	// RequestVote线程
@@ -69,8 +66,7 @@ protected:
 	// 发送rpc信息
 	RPC rpc;
 
-	// 计算超时的线程，结束时会把其他几个接收线程都退出，所以如果想要结束当前所有线程，可以调用结束计时器的函数
-	virtual void timeoutCounterThread();
+	
 	
 	// 注册start函数
 	void registerStart();
@@ -79,11 +75,11 @@ protected:
 	// 注册投票线程RequestVote
 	void registerRequestVote();
 
-	// 停止接收投票和心跳线程
-	virtual void stopThread();
+	
 	// 添加entries，返回值表示是否成功添加
 	bool appendEntriesReal(int prevLogIndex, int prevLogTerm, int leaderCommit, vector<LogEntry> entries);
-
+	// 主线程 leader和candidate发东西，follower守护
+	virtual void work() = 0;
 
 
 public:
@@ -101,6 +97,6 @@ public:
 	// 投票线程RequestVote
 	virtual string requestVote(string requestVoteCodedIntoString) = 0;
 	// 运行该机器，返回值是下一个状态
-	virtual State* run() = 0;
+	virtual State* run();
 };
 

@@ -66,27 +66,7 @@ string Leader::appendEntries(string appendEntriesCodedIntoString) {
 	receiveInfoLock.unlock();
 	return Answer(currentTerm, canAppend).code();
 }
-State* Leader::run() {
-	// 主线程处理发送appendEntries，该线程中检测其他线程是否有退出行为
-	work();
-	return nextState;
-}
 
-
-
-
-
-
-//给其他所有进程同步log entries
-void Leader::work() {
-	// 用nextState作为同步信号量,超时/收到更新的信息的时候就可以退出了
-	while (!nextState) {
-		// 睡眠一段时间
-		sleep_for(seconds(300));
-		checkFollowers();
-		updateCommit();
-	}
-}
 void Leader::checkFollowers() {
 	// 循环遍历所有的follower，检测其nextIndex是否到最后
 		// 1. 有返回值：
@@ -105,8 +85,8 @@ void Leader::checkFollowers() {
 		Answer answer(followerReturnVal[followerID].get());
 		// 返回值term更新，退为follower
 		if (answer.getTerm() > currentTerm) {
-			nextState = new Follower(answer.getTerm(), ID, appendEntriesAddress, requestVoteAddress, commitIndex, lastApplied, logEntries);
-			timeoutCounter.stopCounter();
+			nextState = new Follower(answer.getTerm(), ID, appendEntriesAddress, requestVoteAddress,
+				startAddress, commitIndex, lastApplied, logEntries);
 			return;
 		}
 		// 返回值为true：更新next和match，若next到头就发心跳
@@ -169,7 +149,18 @@ void Leader::resendAppendEntries(int followerID) {
 	followerReturnVal[followerID] =
 		async(&RPC::invokeRemoteFunc, &rpc, serverAddress[followerID], "appendEntries", lastAppendEntries[followerID].code());
 }
-void Leader::stopThread() {
-	State::stopThread();
-	startRpcServer.reset(nullptr);
+
+//给其他所有进程同步log entries
+void Leader::work() {
+	// 用nextState作为同步信号量,超时/收到更新的信息的时候就可以退出了
+	while (!nextState) {
+		// 睡眠一段时间
+		sleep_for(seconds(300));
+		checkFollowers();
+		updateCommit();
+	}
+}
+State* Leader::run() {
+	State::run();
+	return nextState;
 }

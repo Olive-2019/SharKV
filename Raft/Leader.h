@@ -16,7 +16,7 @@ class Leader : public State
 
 	
 
-	// leader的工作内容
+	// 主线程：检测 发送appendEntries commit
 	void work();
 	// 更新commitIndex
 	void updateCommit();
@@ -27,8 +27,7 @@ class Leader : public State
 	void sendAppendEntries(int followerID, int start, int end);
 	// 重发指定follower的包
 	void resendAppendEntries(int followerID);
-	// 停止接收start、投票和心跳线程，后两个是调用父类的函数实现的
-	void stopThread();
+	
 	
 public:
 	Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,

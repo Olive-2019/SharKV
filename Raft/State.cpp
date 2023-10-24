@@ -11,8 +11,7 @@ State::State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWo
 	ServerAddressReader serverAddressReader("AppendEntriesAddress.conf");
 	serverAddress = serverAddressReader.getNetWorkAddresses();
 
-	// 开启计时器
-	timeoutThread = NULL;//new thread(&State::timeoutCounterThread, this);
+	
 	// 开启接收start的线程
 	startThread = new thread(&State::registerStart, this);
 	// 开启AppendEntries
@@ -21,8 +20,11 @@ State::State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWo
 	requestVoteThread = new thread(&State::registerRequestVote, this);
 }
 State::~State() {
+	// 退出这些server线程
+	requestVoteRpcServer.reset(nullptr);
+	appendEntriesRpcServer.reset(nullptr);
+	startRpcServer.reset(nullptr);
 	// 将线程join一下
-	// timeoutThread->join();
 	appendEntriesThread->join();
 	requestVoteThread->join();
 	startThread->join();
@@ -33,15 +35,7 @@ State::~State() {
 	delete requestVoteThread;
 }
 
-void State::timeoutCounterThread() {
-	// 超时返回，转换到candidate
-	if (timeoutCounter.run())
-		nextState = new Candidate(currentTerm + 1, ID, appendEntriesAddress, requestVoteAddress,
-			startAddress, commitIndex, lastApplied, logEntries);
-	// 未超时，主动返回，将nextState的初始化留给stop的调用处
-	// 将其他的接收线程都停了，这样其他函数可以通过调用停止timeout的函数结束掉其他所有线程
-	stopThread();
-}
+
 
 // 注册等待接收AppendEntries
 void State::registerAppendEntries() {
@@ -63,12 +57,6 @@ void State::registerRequestVote() {
 		});
 	requestVoteRpcServer->run();//启动服务端
 	cout << "State::registerRequestVote close RequestVote" << endl;
-}
-
-void State::stopThread() {
-	requestVoteRpcServer.reset(nullptr);
-	appendEntriesRpcServer.reset(nullptr);
-	startRpcServer.reset(nullptr);
 }
 
 int State::getCurrentTerm() const {
@@ -111,4 +99,8 @@ void State::start(AppendEntries newEntries) {
 	// 有新增加的entries，更新lastApplied
 	lastApplied += newEntries.getEntries().size();
 	receiveInfoLock.unlock();
+}
+State* State::run() {
+	work();
+	return nextState;
 }

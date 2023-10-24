@@ -15,10 +15,12 @@ Candidate::Candidate(int currentTerm, int ID, NetWorkAddress appendEntriesAddres
 		sendRequestVote(followerID);
 	}
 	// 开启计时器
-	timeoutThread = new thread(&State::timeoutCounterThread, this);
+	timeoutThread = new thread(&Candidate::timeoutCounterThread, this);
 }
 Candidate::~Candidate() {
+	// join线程
 	timeoutThread->join();
+	// 释放对象
 	delete timeoutThread;
 }
 // 接收RequestVote，不需要重置计时器，leader中计时器只运行一段
@@ -41,6 +43,14 @@ string Candidate::requestVote(string requestVoteCodedIntoString) {
 		startAddress, commitIndex, lastApplied, logEntries);
 	receiveInfoLock.unlock();
 	return Answer(currentTerm, true).code();
+}
+
+void Candidate::timeoutCounterThread() {
+	// 超时返回，转换到candidate
+	if (timeoutCounter.run())
+		nextState = new Candidate(currentTerm + 1, ID, appendEntriesAddress, requestVoteAddress,
+			startAddress, commitIndex, lastApplied, logEntries);
+	// 未超时，主动返回，将nextState的初始化留给stop的调用处
 }
 
 // 接收AppendEntries，不需要重置计时器，leader中计时器只运行一段
@@ -69,31 +79,8 @@ string Candidate::appendEntries(string appendEntriesCodedIntoString) {
 	receiveInfoLock.unlock();
 	return Answer(currentTerm, true).code();
 }
-// 运行该机器，返回值是下一个状态
-State* Candidate::run() {
-	work();
-	return nextState;
-}
 
-void Candidate::work() {
-	while (!nextState) {
-		sleep_for(seconds(300));
-		if (checkRequestVote()) {
-			// 没有决出胜负，重开
-			nextState = new Candidate(currentTerm + 1, ID, appendEntriesAddress, requestVoteAddress, 
-				startAddress, commitIndex, lastApplied, logEntries);
-			timeoutCounter.stopCounter();
-			return;
-		}
-		// 选举成功
-		if (checkVoteResult()) {
-			nextState = new Leader(currentTerm, ID, appendEntriesAddress, requestVoteAddress, 
-				startAddress, commitIndex, lastApplied, logEntries);
-			timeoutCounter.stopCounter();
-			return;
-		}
-	}
-}
+
 // 发送投票信息
 bool Candidate::checkRequestVote() {
 	/*
@@ -129,4 +116,30 @@ void Candidate::sendRequestVote(int followerID) {
 bool Candidate::checkVoteResult() {
 	if (getVoteCounter > voteResult.size() / 2) return true;
 	return false;
+}
+
+void Candidate::work() {
+	while (!nextState) {
+		sleep_for(seconds(300));
+		if (checkRequestVote()) {
+			// 没有决出胜负，重开
+			nextState = new Candidate(currentTerm + 1, ID, appendEntriesAddress, requestVoteAddress,
+				startAddress, commitIndex, lastApplied, logEntries);
+			return;
+		}
+		// 选举成功
+		if (checkVoteResult()) {
+			nextState = new Leader(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
+				startAddress, commitIndex, lastApplied, logEntries);
+			return;
+		}
+	}
+}
+
+// 运行该机器，返回值是下一个状态
+State* Candidate::run() {
+	State::run();
+	// 停止当前计数器
+	timeoutCounter.stopCounter();
+	return nextState;
 }
