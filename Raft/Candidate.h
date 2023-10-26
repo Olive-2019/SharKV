@@ -15,6 +15,8 @@ class Candidate : public State
 	map<int, int> voteResult;
 	// 获得的选票数量
 	int getVoteCounter;
+	// 被拒绝的次数
+	int rejectCounter;
 	
 	// 主线程：运行检测投票
 	void work();

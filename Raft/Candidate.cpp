@@ -4,7 +4,7 @@
 Candidate::Candidate(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
 	NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor, int maxResendNum) :
 	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, commitIndex, lastApplied, logEntries, votedFor), 
-	getVoteCounter(1), maxResendNum(maxResendNum) {
+	getVoteCounter(1), maxResendNum(maxResendNum), rejectCounter(0){
 	if (debug) cout << endl << ID << " become Candidate" << endl;
 	// 读入集群中所有server的地址，candidate读入RequestVoteAddress的地址
 	ServerAddressReader serverAddressReader("RequestVoteAddress.conf");
@@ -108,8 +108,10 @@ bool Candidate::checkRequestVote() {
 		// 没有收到合法投票，voteResult置为0
 		else {
 			follower->second = -1;
-			if (answer.getTerm() > currentTerm) {
-				nextState = new Follower(answer.getTerm(), ID, appendEntriesAddress, requestVoteAddress, startAddress,
+			rejectCounter++;
+			if (answer.getTerm() > currentTerm || rejectCounter > serverAddress.size() / 2) {
+				if (answer.getTerm() > currentTerm) currentTerm = answer.getTerm();
+				nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress,
 					commitIndex, lastApplied, logEntries);
 				return true;
 			}
@@ -144,6 +146,7 @@ Answer Candidate::getOneFollowerReturnValue(int followerID) {
 	for (int i = 0; i < followerReturnVal[followerID].size(); ++i)
 		if (followerReturnVal[followerID][i]._Is_ready()) {
 			Answer ans(followerReturnVal[followerID][i].get());
+			if (debug) cout << "Candidate::getOneFollowerReturnValue get return value from " << followerID << endl;
 			followerReturnVal[followerID].clear();
 			return ans;
 		}
@@ -159,7 +162,7 @@ bool Candidate::checkVoteResult() {
 
 void Candidate::work() {
 	while (!nextState) {
-		sleep_for(seconds(15));
+		sleep_for(seconds(2));
 		if (!checkRequestVote()) {
 			// 没有决出胜负，重开
 			nextState = new Candidate(currentTerm + 1, ID, appendEntriesAddress, requestVoteAddress,

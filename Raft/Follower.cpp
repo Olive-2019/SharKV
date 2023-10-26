@@ -11,6 +11,7 @@ Follower::Follower(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,
 	timeoutThread = new thread(&Follower::timeoutCounterThread, this);
 }
 Follower::~Follower() {
+	timeoutCounter.stopCounter();
 	timeoutThread->join();
 	delete timeoutThread;
 	if (debug) cout << ID << " will not be Follower any more." << endl;
@@ -47,8 +48,8 @@ string Follower::requestVote(string requestVoteCodedIntoString) {
 	if (requestVote.getTerm() < currentTerm) return Answer(currentTerm, false).code();
 	currentTerm = requestVote.getTerm();
 	//如果 （votedFor == null || votedFor == candidateId） && candidate的log比当前节点新，投票给该节点，否则拒绝该节点
-	if ((votedFor < 0 || votedFor == requestVote.getCandidateId())
-		&& isNewerThanMe(requestVote.getLastLogIndex(), requestVote.getLastLogTerm())) {
+	if ((votedFor < 0 && isNewerThanMe(requestVote.getLastLogIndex(), requestVote.getLastLogTerm()))
+		|| votedFor == requestVote.getCandidateId()) {
 		votedFor = requestVote.getCandidateId();
 		return Answer(currentTerm, true).code();
 	}
@@ -66,7 +67,7 @@ string Follower::appendEntries(string appendEntriesCodedIntoString) {
 		|| appendEntries.getPrevLogIndex() >= logEntries.size()
 		|| logEntries[appendEntries.getPrevLogIndex()].getTerm() != appendEntries.getTerm())
 		return Answer(currentTerm, false).code();
-	
+	currentTerm = appendEntries.getTerm();
 		
 	int index = appendEntries.getPrevLogIndex() + 1;
 	// 更新leaderID

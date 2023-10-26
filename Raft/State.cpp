@@ -6,12 +6,7 @@ State::State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWo
 	requestVoteAddress(requestVoteAddress), startAddress(startAddress), commitIndex(commitIndex), lastApplied(lastApplied),
 	logEntries(logEntries), nextState(NULL), debug(false){
 	setDebug();
-	// 开启接收start的线程
-	startThread = new thread(&State::registerStart, this);
-	// 开启AppendEntries
-	appendEntriesThread = new thread(&State::registerAppendEntries, this);
-	// 开启RequestVote
-	requestVoteThread = new thread(&State::registerRequestVote, this);
+	
 }
 State::~State() {
 	//lock_guard<mutex> lockGuard(receiveInfoLock);
@@ -54,6 +49,25 @@ void State::registerRequestVote() {
 	cout << "State::registerRequestVote close RequestVote" << endl;
 }
 
+void State::registerServer() {
+	// 开启接收start的线程
+	startThread = new thread(&State::registerStart, this);
+	// 开启AppendEntries
+	appendEntriesThread = new thread(&State::registerAppendEntries, this);
+	// 开启RequestVote
+	requestVoteThread = new thread(&State::registerRequestVote, this);
+}
+
+// 注册start函数
+void State::registerStart() {
+	startRpcServer.reset(nullptr);
+	startRpcServer.reset(new rpc_server(startAddress.second, handleNum));
+	startRpcServer->register_handler("start", [this](rpc_conn conn, string newEntries) {
+		this->start(std::move(newEntries));
+		});
+	startRpcServer->run();//启动服务端
+	cout << "State::registerStart close start" << endl;
+}
 int State::getCurrentTerm() const {
 	return currentTerm;
 }
@@ -77,16 +91,7 @@ bool State::appendEntriesReal(int prevLogIndex, int prevLogTerm, int leaderCommi
 	// 返回执行成功的信息
 	return true;
 }
-// 注册start函数
-void State::registerStart() {
-	startRpcServer.reset(nullptr);
-	startRpcServer.reset(new rpc_server(startAddress.second, handleNum));
-	startRpcServer->register_handler("start", [this](rpc_conn conn, string newEntries) {
-			this->start(std::move(newEntries));
-	});
-	startRpcServer->run();//启动服务端
-	cout << "Leader::registerStart close start" << endl;
-}
+
 void State::start(AppendEntries newEntries) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	//将client给的数据加入当前列表中
@@ -95,6 +100,7 @@ void State::start(AppendEntries newEntries) {
 	lastApplied += newEntries.getEntries().size();
 }
 State* State::run() {
+	registerServer();
 	work();
 	return nextState;
 }

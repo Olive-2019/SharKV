@@ -69,8 +69,8 @@ protected:
 	// 发送rpc信息
 	RPC rpc;
 
-	
-	
+	// 注册三个服务
+	void registerServer();
 	// 注册start函数
 	void registerStart();
 	// 注册等待接收AppendEntries
