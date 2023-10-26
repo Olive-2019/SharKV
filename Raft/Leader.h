@@ -7,8 +7,12 @@ class Leader : public State
 	map<int, int> nextIndex;
 	// 每个follower当前匹配到哪一条log entry（初始化值为0）
 	map<int, int> matchIndex;
+	
 	// 用于异步接收心跳/返回值的future
-	map<int, shared_future<string>> followerReturnVal;
+	map<int, vector<shared_future<string>>> followerReturnVal;
+	// 最大重发次数
+	int maxResendNum;
+
 	// 记录上一个包，方便重发
 	map<int, AppendEntries> lastAppendEntries;
 
@@ -22,16 +26,21 @@ class Leader : public State
 	void updateCommit();
 	// 检测所有follower，重发或新发包
 	void checkFollowers();
+	// 检查单个follower，若成功则true，若不成功则尝试重发
+	bool checkOneFollowerReturnValue(int followerID);
+	// 获取单个follower的返回值
+	Answer getOneFollowerReturnValue(int followerID);
 
-	// 给指定ID的follower发送appendEntries，内容为本状态机的[start,end]的内容，若start<0则为空的心跳信息
+	// 给指定ID的follower发送appendEntries，内容为本状态机的[start,end]的内容，若start<0则为空的心跳信息(组装好AppendEntries)
 	void sendAppendEntries(int followerID, int start, int end);
-	// 重发指定follower的包
-	void resendAppendEntries(int followerID);
+	// 发指定follower的包，返回值代表还能不能发包（拿一步的AppendEntries重发）
+	bool sendAppendEntries(int followerID);
 	
 	
 public:
 	Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
-		NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor = -1);
+		NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries,
+		int votedFor = -1, int maxResendNum = 3);
 	// 析构函数完成线程join和delete掉线程对象的任务
 	~Leader();
 	// 接收RequestVote

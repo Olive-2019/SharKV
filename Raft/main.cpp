@@ -9,6 +9,8 @@ NetWorkAddress getNetWorkAddress(const char* ip,  const char* port) {
 int main(int argc, char* argv[]) {
 	int serverID; 
 	vector<NetWorkAddress> addresses;
+
+	
 	if (argc > 1) {
 		cout << argc << endl;
 		serverID = atoi(argv[1]);
@@ -20,6 +22,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	else {
+		// 调试用传参
 		serverID = 1;
 		addresses.push_back(getNetWorkAddress("127.0.0.1", "8091"));
 		addresses.push_back(getNetWorkAddress("127.0.0.1", "8191"));

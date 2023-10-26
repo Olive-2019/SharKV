@@ -20,18 +20,25 @@ class Candidate : public State
 	void work();
 	// 检查发送的投票信息，返回值为true：都返回了 false：存在未返回的值
 	bool checkRequestVote();
-	// 根据当前信息，发送requestVote
-	void sendRequestVote(int followerID);
-	
+	// 根据当前信息，尝试发送requestVote，返回值表示是否发送成功
+	bool sendRequestVote(int followerID);
+
+	// 检查单个follower，若成功则true，若不成功则尝试重发
+	bool checkOneFollowerReturnValue(int followerID);
+	// 获取单个follower的返回值
+	Answer getOneFollowerReturnValue(int followerID);
+
+
 	// 检测投票结果，只有返回true时知道选举成功，返回false意味着未知数，选举失败靠appendEntries
 	bool checkVoteResult();
 
 	// 用于异步接收心跳/返回值的future
-	map<int, shared_future<string>> followerReturnVal;
-	
+	map<int, vector<shared_future<string>>> followerReturnVal;
+	int maxResendNum;
 public:
 	Candidate(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
-		NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor = -1);
+		NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries,
+		int votedFor = -1, int maxResendNum = 3);
 	~Candidate();
 	// 接收RequestVote
 	string requestVote(string requestVoteCodedIntoString);

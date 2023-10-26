@@ -32,6 +32,7 @@ bool Follower::isNewerThanMe(int lastLogIndex, int lastLogTerm) const {
 	return currentTerm < logEntries.back().getTerm();
 }
 void Follower::start(AppendEntries newEntries) {
+	lock_guard<mutex> lockGuard(receiveInfoLock);
 	// 假如有leader，转发给leader，没有就给自己加
 	if (serverAddress.find(leaderID) != serverAddress.end())
 		rpc.invokeRemoteFunc(serverAddress[leaderID], "start", newEntries.code());
@@ -39,27 +40,22 @@ void Follower::start(AppendEntries newEntries) {
 }
 // 接收RequestVote
 string Follower::requestVote(string requestVoteCodedIntoString) {
-	receiveInfoLock.lock();
+	lock_guard<mutex> lockGuard(receiveInfoLock);
 	if (debug) cout << ID << " receive requestVote Msg" << endl;
 	RequestVote requestVote(requestVoteCodedIntoString);
 	//直接返回false：term < currentTerm
-	if (requestVote.getTerm() < currentTerm) {
-		receiveInfoLock.unlock();
-		return Answer(currentTerm, false).code();
-	}
+	if (requestVote.getTerm() < currentTerm) return Answer(currentTerm, false).code();
 	//如果 （votedFor == null || votedFor == candidateId） && candidate的log比当前节点新，投票给该节点，否则拒绝该节点
 	if ((votedFor < 0 || votedFor == requestVote.getCandidateId())
 		&& isNewerThanMe(requestVote.getLastLogIndex(), requestVote.getLastLogTerm())) {
 		votedFor = requestVote.getCandidateId();
-		receiveInfoLock.unlock();
 		return Answer(currentTerm, true).code();
 	}
-	receiveInfoLock.unlock();
 	return Answer(currentTerm, false).code();
 }
 // 接收AppendEntries
 string Follower::appendEntries(string appendEntriesCodedIntoString) {
-	receiveInfoLock.lock();
+	lock_guard<mutex> lockGuard(receiveInfoLock);
 	if (debug) cout << ID << " receive appendEntries Msg" << endl;
 	AppendEntries appendEntries(appendEntriesCodedIntoString);
 	// 超时计时器计数
@@ -67,10 +63,9 @@ string Follower::appendEntries(string appendEntriesCodedIntoString) {
 	//直接返回false：term < currentTerm or prevLogIndex/Term对应的log不存在
 	if ((appendEntries.getTerm() < currentTerm)
 		|| appendEntries.getPrevLogIndex() >= logEntries.size()
-		|| logEntries[appendEntries.getPrevLogIndex()].getTerm() != appendEntries.getTerm()) {
-		receiveInfoLock.unlock();
+		|| logEntries[appendEntries.getPrevLogIndex()].getTerm() != appendEntries.getTerm())
 		return Answer(currentTerm, false).code();
-	}
+	
 		
 	int index = appendEntries.getPrevLogIndex() + 1;
 	// 更新leaderID
@@ -87,7 +82,6 @@ string Follower::appendEntries(string appendEntriesCodedIntoString) {
 		commitIndex = appendEntries.getLeaderCommit();
 		if (commitIndex > logEntries.size() - 1) commitIndex = logEntries.size() - 1;
 	}
-	receiveInfoLock.unlock();
 	return Answer(currentTerm, true).code();
 }
 void Follower::work() {

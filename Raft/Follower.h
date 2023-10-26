@@ -18,7 +18,8 @@ class Follower : public State
 	void work();
 public:
 	Follower(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
-		NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor = -1);
+		NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries,
+		int votedFor = -1);
 	~Follower();
 	// 重载start调用,转发给leader
 	void start(AppendEntries newEntries);

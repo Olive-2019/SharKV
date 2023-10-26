@@ -13,8 +13,11 @@ using namespace rest_rpc::rpc_service;
 using std::unique_ptr;
 using namespace rest_rpc;
 using std::thread;
+using std::lock_guard;
 class State
 {
+	// 接收句柄数量
+	int handleNum;
 protected:
 	/*需要持久化的state*/
 	//server所处的term，也是该server所得知的最新term
@@ -86,7 +89,7 @@ protected:
 public:
 	// 构造函数完成初始化两个接收线程和计时器线程的任务
 	State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,NetWorkAddress requestVoteAddress, 
-		NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor = -1);
+		NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor = -1, int handleNum = 10);
 	// 析构函数完成线程join和delete掉线程对象的任务
 	virtual ~State();
 

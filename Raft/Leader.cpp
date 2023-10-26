@@ -1,8 +1,9 @@
 #include "Leader.h"
 #include "Follower.h"
 Leader::Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
-	NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor) :
-	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, commitIndex, lastApplied, logEntries, votedFor) {
+	NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor, int maxResendNum) :
+	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, commitIndex, lastApplied, logEntries, votedFor),
+    maxResendNum(maxResendNum){
 	
 	if (debug) cout << endl << ID << " become Leader" << endl;
 
@@ -27,12 +28,12 @@ Leader::~Leader() {
 
 // 接收RequestVote
 string Leader::requestVote(string requestVoteCodedIntoString) {
-	receiveInfoLock.lock();
+	lock_guard<mutex> lockGuard(receiveInfoLock);
+
 	if (debug) cout << ID << " receive requestVote Msg" << endl;
 	RequestVote requestVote(requestVoteCodedIntoString);
 	// term没有比当前leader大，可以直接拒绝，并返回当前的term
 	if (requestVote.getTerm() <= currentTerm) {
-		receiveInfoLock.unlock();
 		if (debug) cout << "reject " << requestVote.getCandidateId() << ", cause its term is old." << endl;
 		return Answer(currentTerm, false).code();
 	}
@@ -45,19 +46,17 @@ string Leader::requestVote(string requestVoteCodedIntoString) {
 	// 生成下一状态机
 	nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
 		startAddress, commitIndex, lastApplied, logEntries, votedFor = requestVote.getCandidateId());
-	receiveInfoLock.unlock();
 	if (debug) cout << "vote for " << requestVote.getCandidateId() << "." << endl;
 	return Answer(currentTerm, true).code();
 }
 // 接收AppendEntries
 string Leader::appendEntries(string appendEntriesCodedIntoString) {
-	receiveInfoLock.lock();
+	lock_guard<mutex> lockGuard(receiveInfoLock);
 	if (debug) cout << ID << " receive appendEntries Msg" << endl;
 	AppendEntries appendEntries(appendEntriesCodedIntoString);
 	// timeoutCounter.setReceiveInfoFlag();
 	// term没有比当前leader大，可以直接拒绝，并返回当前的term
 	if (appendEntries.getTerm() <= currentTerm) {
-		receiveInfoLock.unlock();
 		if (debug) cout << "reject " << appendEntries.getLeaderId() << "'s appendEntries, cause its term is old." << endl;
 		return Answer(currentTerm, false).code();
 	}
@@ -72,8 +71,6 @@ string Leader::appendEntries(string appendEntriesCodedIntoString) {
 		nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
 			startAddress, commitIndex, lastApplied, logEntries);
 	} 
-	
-	receiveInfoLock.unlock();
 	return Answer(currentTerm, canAppend).code();
 }
 
@@ -87,12 +84,10 @@ void Leader::checkFollowers() {
 	for (auto follower = nextIndex.begin(); follower != nextIndex.end(); ++follower) {
 		int followerID = follower->first;
 		// 无返回值：重发上一个包
-		if (!followerReturnVal[followerID]._Is_ready()) {
-			resendAppendEntries(followerID);
-			continue;
-		}
+		if (!checkOneFollowerReturnValue(followerID)) continue;
 		// 有返回值
-		Answer answer(followerReturnVal[followerID].get());
+		Answer answer = getOneFollowerReturnValue(followerID);
+		if (debug) cout << "receive the return value of " << followerID << ", and its result is " << answer.getSuccess() << endl;
 		// 返回值term更新，退为follower
 		if (answer.getTerm() > currentTerm) {
 			nextState = new Follower(answer.getTerm(), ID, appendEntriesAddress, requestVoteAddress,
@@ -121,6 +116,27 @@ void Leader::checkFollowers() {
 		}
 	}
 }
+// 检查单个follower，若成功则true，若不成功则尝试重发
+bool Leader::checkOneFollowerReturnValue(int followerID) {
+	// 遍历follower的返回值
+	for (int i = 0; i < followerReturnVal[followerID].size(); ++i) 
+		if (followerReturnVal[followerID][i]._Is_ready()) return true;
+	// 都没有返回，则尝试重发
+	sendAppendEntries(followerID);
+	return false;
+}
+// 获取单个follower的返回值
+Answer Leader::getOneFollowerReturnValue(int followerID) {
+	for (int i = 0; i < followerReturnVal[followerID].size(); ++i)
+		if (followerReturnVal[followerID][i]._Is_ready()) {
+			Answer ans(followerReturnVal[followerID][i].get());
+			followerReturnVal[followerID].clear();
+			return ans;
+		}
+	throw exception("Leader::getOneFollowerReturnValue Logical Error: didn't hava return value.");
+	return Answer(0, false);
+}
+
 void Leader::updateCommit() {
 	// commit超过半数follower可以match的log entries
 	while (commitIndex < logEntries.size()) {
@@ -151,15 +167,19 @@ void Leader::sendAppendEntries(int followerID, int start, int end) {
 	// 待发送
 	lastAppendEntries[followerID] = AppendEntries(currentTerm, ID, prevIndex, prevTerm, commitIndex, entries);
 	// 异步调用 发送请求
-	resendAppendEntries(followerID);
+	sendAppendEntries(followerID);
 	
 }
-void Leader::resendAppendEntries(int followerID) {
+bool Leader::sendAppendEntries(int followerID) {
 	if (serverAddress.find(followerID) == serverAddress.end()) throw exception("Leader::resendAppendEntries follower doesn't exist.");
+	// 如果已经超出最大重发次数，则不重发，直接返回
+	if (followerReturnVal[followerID].size() >= maxResendNum) return false;
 	// 异步调用 发送请求
-	followerReturnVal[followerID] =
-		async(&RPC::invokeRemoteFunc, &rpc, serverAddress[followerID], "appendEntries", lastAppendEntries[followerID].code());
+	followerReturnVal[followerID].push_back(
+		async(&RPC::invokeRemoteFunc, &rpc, serverAddress[followerID], 
+			"appendEntries", lastAppendEntries[followerID].code()));
 	if (debug) cout << "send appendEntries to " << followerID << endl;
+	return true;
 }
 
 //给其他所有进程同步log entries
