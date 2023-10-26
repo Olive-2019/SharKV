@@ -31,8 +31,8 @@ Candidate::~Candidate() {
 // 接收RequestVote，不需要重置计时器，leader中计时器只运行一段
 string Candidate::requestVote(string requestVoteCodedIntoString) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
-	if (debug) cout << ID << " receive requestVote Msg" << endl;
 	RequestVote requestVote(requestVoteCodedIntoString);
+	if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << endl;
 	// term没有比当前Candidate大，可以直接拒绝，并返回当前的term
 	if (requestVote.getTerm() <= currentTerm) return Answer(currentTerm, false).code();
 	// term更新，则退出当前状态，返回到Follower的状态

@@ -79,7 +79,7 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="PersistenceInfoReaderAndWriter.cpp">
-      <Filter>源文件</Filter>
+      <Filter>源文件\ORM</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -129,7 +129,7 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="PersistenceInfoReaderAndWriter.h">
-      <Filter>头文件</Filter>
+      <Filter>头文件\ORM</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

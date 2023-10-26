@@ -29,9 +29,8 @@ Leader::~Leader() {
 // 接收RequestVote
 string Leader::requestVote(string requestVoteCodedIntoString) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
-
-	if (debug) cout << ID << " receive requestVote Msg" << endl;
 	RequestVote requestVote(requestVoteCodedIntoString);
+	if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << endl;
 	// term没有比当前leader大，可以直接拒绝，并返回当前的term
 	if (requestVote.getTerm() <= currentTerm) {
 		if (debug) cout << "reject " << requestVote.getCandidateId() << ", cause its term is old." << endl;

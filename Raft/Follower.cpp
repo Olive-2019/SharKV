@@ -41,10 +41,11 @@ void Follower::start(AppendEntries newEntries) {
 // 接收RequestVote
 string Follower::requestVote(string requestVoteCodedIntoString) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
-	if (debug) cout << ID << " receive requestVote Msg" << endl;
 	RequestVote requestVote(requestVoteCodedIntoString);
+	if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << endl;
 	//直接返回false：term < currentTerm
 	if (requestVote.getTerm() < currentTerm) return Answer(currentTerm, false).code();
+	currentTerm = requestVote.getTerm();
 	//如果 （votedFor == null || votedFor == candidateId） && candidate的log比当前节点新，投票给该节点，否则拒绝该节点
 	if ((votedFor < 0 || votedFor == requestVote.getCandidateId())
 		&& isNewerThanMe(requestVote.getLastLogIndex(), requestVote.getLastLogTerm())) {

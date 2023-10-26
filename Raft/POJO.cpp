@@ -1,7 +1,7 @@
 #include "POJO.h"
 int POJO::getFirstNumber(const string& buff, int& index) const {
 	int number = 0;
-	while (buff[index] >= '0' && buff[index] <= '9') {
+	while (index < buff.size() && buff[index] >= '0' && buff[index] <= '9') {
 		number *= 10;
 		number += (buff[index++] - '0');
 	}
