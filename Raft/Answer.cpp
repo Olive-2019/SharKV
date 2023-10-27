@@ -8,7 +8,7 @@ Answer::Answer(string codedString) {
 }
 // –Ú¡–ªØ
 string Answer::code() const {
-	return to_string(term) + " " + to_string(int(success));
+	return to_string(term) + " " + to_string(int(success)) + " \n";
 }
 int Answer::getTerm() const {
 	return term;

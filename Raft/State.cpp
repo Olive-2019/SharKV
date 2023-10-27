@@ -15,9 +15,9 @@ State::~State() {
 	appendEntriesRpcServer.reset(nullptr);
 	startRpcServer.reset(nullptr);
 	// 将线程join一下
-	appendEntriesThread->join();
-	requestVoteThread->join();
-	startThread->join();
+	if (appendEntriesThread) appendEntriesThread->join();
+	if (requestVoteThread) requestVoteThread->join();
+	if (startThread) startThread->join();
 	// 释放线程对象
 	delete startThread;
 	// delete timeoutThread;

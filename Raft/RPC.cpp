@@ -11,13 +11,14 @@ string RPC::invokeRemoteFunc(NetWorkAddress address, string funcName, string arg
     /*if (funcName == "requestVote") {
         cout << "RPC::invokeRemoteFunc" << endl;
     }*/
-    string result = "";
+    string ans;
     try {
-        result = client.call<std::string>(funcName, arg);// funcName 为事先注册好的服务名，需要一个 arg 参数
+        auto result = client.call<std::string>(funcName, arg);// funcName 为事先注册好的服务名，需要一个 arg 参数
+        ans = result;
     }
     catch (exception e) {
         cout << e.what() << endl;
     }
-    cout << "RPC::invokeRemoteFunc " << result << endl;
-    return result;
+    cout << "RPC::invokeRemoteFunc " << ans << endl;
+    return ans;
 }
