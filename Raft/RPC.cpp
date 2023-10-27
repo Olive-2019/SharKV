@@ -8,7 +8,16 @@ string RPC::invokeRemoteFunc(NetWorkAddress address, string funcName, string arg
     if (!has_connected) throw exception("RPC::invokeRemoteFunc can't connect");
 
     /*调用远程服务，返回欢迎信息*/
-    string result = client.call<std::string>(funcName, arg);// funcName 为事先注册好的服务名，需要一个 arg 参数
+    /*if (funcName == "requestVote") {
+        cout << "RPC::invokeRemoteFunc" << endl;
+    }*/
+    string result = "";
+    try {
+        result = client.call<std::string>(funcName, arg);// funcName 为事先注册好的服务名，需要一个 arg 参数
+    }
+    catch (exception e) {
+        cout << e.what() << endl;
+    }
     // cout << result << endl;
     return result;
 }

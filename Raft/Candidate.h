@@ -26,7 +26,7 @@ class Candidate : public State
 	bool sendRequestVote(int followerID);
 
 	// 检查单个follower，若成功则true，若不成功则尝试重发
-	bool checkOneFollowerReturnValue(int followerID);
+	bool checkOneFollowerReturnValue(int followerID, Answer& ans);
 	// 获取单个follower的返回值
 	Answer getOneFollowerReturnValue(int followerID);
 
@@ -46,8 +46,6 @@ public:
 	string requestVote(string requestVoteCodedIntoString);
 	// 接收AppendEntries
 	string appendEntries(string appendEntriesCodedIntoString);
-	// 运行该机器，返回值是下一个状态
-	State* run();
 
 };
 

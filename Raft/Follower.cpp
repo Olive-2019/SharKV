@@ -43,17 +43,20 @@ void Follower::start(AppendEntries newEntries) {
 string Follower::requestVote(string requestVoteCodedIntoString) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	RequestVote requestVote(requestVoteCodedIntoString);
-	if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << endl;
+	if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << " content is " << requestVote.code() << endl;
 	//直接返回false：term < currentTerm
 	if (requestVote.getTerm() < currentTerm) return Answer(currentTerm, false).code();
 	currentTerm = requestVote.getTerm();
 	//如果 （votedFor == null || votedFor == candidateId） && candidate的log比当前节点新，投票给该节点，否则拒绝该节点
+	bool vote = false;
 	if ((votedFor < 0 && isNewerThanMe(requestVote.getLastLogIndex(), requestVote.getLastLogTerm()))
 		|| votedFor == requestVote.getCandidateId()) {
 		votedFor = requestVote.getCandidateId();
-		return Answer(currentTerm, true).code();
+		vote = true;
 	}
-	return Answer(currentTerm, false).code();
+	Answer answer(currentTerm, vote);
+	if (debug) cout << "Follower::requestVote send to " << requestVote.getCandidateId() << " content:" << answer.code() << endl;
+	return answer.code();
 }
 // 接收AppendEntries
 string Follower::appendEntries(string appendEntriesCodedIntoString) {
@@ -92,10 +95,4 @@ void Follower::work() {
 		// 睡眠一段时间
 		sleep_for(seconds(2));
 	}
-}
-// 跑起来，转化到下一个状态
-State* Follower::run() {
-	State::run();
-	timeoutCounter.stopCounter();
-	return nextState;
 }

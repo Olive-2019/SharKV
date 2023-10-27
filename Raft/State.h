@@ -14,6 +14,8 @@ using std::unique_ptr;
 using namespace rest_rpc;
 using std::thread;
 using std::lock_guard;
+using std::future_status;
+
 class State
 {
 	// 接收句柄数量

@@ -47,7 +47,5 @@ public:
 	string requestVote(string requestVoteCodedIntoString);
 	// 接收AppendEntries
 	string appendEntries(string appendEntriesCodedIntoString);
-	// 运行该机器，返回值是下一个状态
-	State* run();
 };
 

@@ -191,7 +191,3 @@ void Leader::work() {
 		updateCommit();
 	}
 }
-State* Leader::run() {
-	State::run();
-	return nextState;
-}

@@ -6,7 +6,7 @@ State::State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWo
 	requestVoteAddress(requestVoteAddress), startAddress(startAddress), commitIndex(commitIndex), lastApplied(lastApplied),
 	logEntries(logEntries), nextState(NULL), debug(false){
 	setDebug();
-	
+	appendEntriesThread = requestVoteThread = startThread = NULL;
 }
 State::~State() {
 	//lock_guard<mutex> lockGuard(receiveInfoLock);
@@ -36,7 +36,7 @@ void State::registerAppendEntries() {
 		});
 	//appendEntriesRpcServer->register_handler("appendEntries", appendEntries);
 	appendEntriesRpcServer->run();//启动服务端
-	cout << "State::registerAppendEntries close AppendEntries" << endl;
+	if (debug) cout << "State::registerAppendEntries close AppendEntries" << endl;
 }
 
 // 注册投票线程RequestVote
@@ -46,7 +46,7 @@ void State::registerRequestVote() {
 			this->requestVote(std::move(requestVoteCodedIntoString));
 		});
 	requestVoteRpcServer->run();//启动服务端
-	cout << "State::registerRequestVote close RequestVote" << endl;
+	if (debug) cout << "State::registerRequestVote close RequestVote" << endl;
 }
 
 void State::registerServer() {
@@ -66,7 +66,7 @@ void State::registerStart() {
 		this->start(std::move(newEntries));
 		});
 	startRpcServer->run();//启动服务端
-	cout << "State::registerStart close start" << endl;
+	if (debug) cout << "State::registerStart close start" << endl;
 }
 int State::getCurrentTerm() const {
 	return currentTerm;

@@ -22,6 +22,7 @@ Candidate::Candidate(int currentTerm, int ID, NetWorkAddress appendEntriesAddres
 	timeoutThread = new thread(&Candidate::timeoutCounterThread, this);
 }
 Candidate::~Candidate() {
+	timeoutCounter.stopCounter();
 	// join线程
 	timeoutThread->join();
 	// 释放对象
@@ -98,10 +99,10 @@ bool Candidate::checkRequestVote() {
 		if (follower->second) continue;
 		left = true;
 		int followerID = follower->first;
+		Answer answer(0, false);
 		// 没有返回值：重发
-		if (!checkOneFollowerReturnValue(followerID)) continue;
+		if (!checkOneFollowerReturnValue(followerID, answer)) continue;
 		// 有返回值：更新voteResult和getVoteCounter
-		Answer answer = getOneFollowerReturnValue(followerID);
 		if (debug) cout << "receive the return value of " << followerID << ", and its result is " << answer.getSuccess() << endl;
 		// 收到投票，voteResult置为1
 		if (answer.getSuccess()) follower->second = 1, getVoteCounter++;
@@ -128,31 +129,36 @@ bool Candidate::sendRequestVote(int followerID) {
 	// 异步调用 发送请求
 	followerReturnVal[followerID].push_back(
 		async(&RPC::invokeRemoteFunc, &rpc, serverAddress[followerID], "requestVote", requestVoteContent.code()));
-	if (debug) cout << "send requestVote to " << followerID << endl;
+	if (debug) cout << "send requestVote to " << followerID << " content is " << requestVoteContent.code() << endl;
 }
 
 // 检查单个follower，若成功则true，若不成功则尝试重发
-bool Candidate::checkOneFollowerReturnValue(int followerID) {
-	// 遍历follower的返回值
-	for (int i = 0; i < followerReturnVal[followerID].size(); ++i)
-		if (followerReturnVal[followerID][i]._Is_ready()) return true;
+bool Candidate::checkOneFollowerReturnValue(int followerID, Answer& ans) {
+
+	for (auto val = followerReturnVal[followerID].begin(); val != followerReturnVal[followerID].end(); ) {
+		future_status status = val->wait_for(seconds(0));
+		if (status == future_status::ready) {
+			// 这个地方返回值为空字符串？但是follower输出有内容
+			string returnValStr = val->get();
+			// 不知道为啥返回值会是空，先硬跳过了
+			if (!returnValStr.size()) {
+				val = followerReturnVal[followerID].erase(val);
+				continue;
+			}
+			ans = Answer(returnValStr);
+			if (debug) cout << "Candidate::getOneFollowerReturnValue get return value from " << followerID << endl;
+			followerReturnVal[followerID].clear();
+			return true;
+		}
+		else if (status == future_status::timeout) val = followerReturnVal[followerID].erase(val);
+		else val++;
+	}
 	// 都没有返回，则尝试重发
 	sendRequestVote(followerID);
 	return false;
 }
 
-// 获取单个follower的返回值
-Answer Candidate::getOneFollowerReturnValue(int followerID) {
-	for (int i = 0; i < followerReturnVal[followerID].size(); ++i)
-		if (followerReturnVal[followerID][i]._Is_ready()) {
-			Answer ans(followerReturnVal[followerID][i].get());
-			if (debug) cout << "Candidate::getOneFollowerReturnValue get return value from " << followerID << endl;
-			followerReturnVal[followerID].clear();
-			return ans;
-		}
-	throw exception("Candidate::getOneFollowerReturnValue Logical Error: didn't hava return value.");
-	return Answer(0, false);
-}
+
 
 // 检测投票结果
 bool Candidate::checkVoteResult() {
@@ -178,10 +184,3 @@ void Candidate::work() {
 	}
 }
 
-// 运行该机器，返回值是下一个状态
-State* Candidate::run() {
-	State::run();
-	// 停止当前计数器
-	timeoutCounter.stopCounter();
-	return nextState;
-}
