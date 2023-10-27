@@ -35,12 +35,12 @@ void Follower::start(AppendEntries newEntries) {
 	else State::start(newEntries);
 }
 // 接收RequestVote
-string Follower::requestVote(string requestVoteCodedIntoString) {
+Answer Follower::requestVote(string requestVoteCodedIntoString) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	RequestVote requestVote(requestVoteCodedIntoString);
 	if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << " content is " << requestVote.code() << endl;
 	//直接返回false：term < currentTerm
-	if (requestVote.getTerm() < currentTerm) return Answer(currentTerm, false).code();
+	if (requestVote.getTerm() < currentTerm) return Answer{currentTerm, false};
 	currentTerm = requestVote.getTerm();
 	//如果 （votedFor == null || votedFor == candidateId） && candidate的log比当前节点新，投票给该节点，否则拒绝该节点
 	bool vote = false;
@@ -49,12 +49,10 @@ string Follower::requestVote(string requestVoteCodedIntoString) {
 		votedFor = requestVote.getCandidateId();
 		vote = true;
 	}
-	Answer answer(currentTerm, vote);
-	if (debug) cout << "Follower::requestVote send to " << requestVote.getCandidateId() << " content:" << answer.code() << endl;
-	return answer.code();
+	return Answer{ currentTerm, vote };
 }
 // 接收AppendEntries
-string Follower::appendEntries(string appendEntriesCodedIntoString) {
+Answer Follower::appendEntries(string appendEntriesCodedIntoString) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	if (debug) cout << ID << " receive appendEntries Msg" << endl;
 	AppendEntries appendEntries(appendEntriesCodedIntoString);
@@ -64,7 +62,7 @@ string Follower::appendEntries(string appendEntriesCodedIntoString) {
 	if ((appendEntries.getTerm() < currentTerm)
 		|| appendEntries.getPrevLogIndex() >= logEntries.size()
 		|| logEntries[appendEntries.getPrevLogIndex()].getTerm() != appendEntries.getTerm())
-		return Answer(currentTerm, false).code();
+		return Answer{ currentTerm, false };
 	currentTerm = appendEntries.getTerm();
 		
 	int index = appendEntries.getPrevLogIndex() + 1;
@@ -82,7 +80,7 @@ string Follower::appendEntries(string appendEntriesCodedIntoString) {
 		commitIndex = appendEntries.getLeaderCommit();
 		if (commitIndex > logEntries.size() - 1) commitIndex = logEntries.size() - 1;
 	}
-	return Answer(currentTerm, true).code();
+	return Answer{ currentTerm, true };
 }
 void Follower::work() {
 

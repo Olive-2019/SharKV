@@ -16,12 +16,12 @@ Candidate::~Candidate() {
 	if (debug) cout << ID << " will not be Candidate any more." << endl;
 }
 // 接收RequestVote，不需要重置计时器，leader中计时器只运行一段
-string Candidate::requestVote(string requestVoteCodedIntoString) {
+Answer Candidate::requestVote(string requestVoteCodedIntoString) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	RequestVote requestVote(requestVoteCodedIntoString);
 	if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << endl;
 	// term没有比当前Candidate大，可以直接拒绝，并返回当前的term
-	if (requestVote.getTerm() <= currentTerm) return Answer(currentTerm, false).code();
+	if (requestVote.getTerm() <= currentTerm) return Answer{ currentTerm, false };
 	// term更新，则退出当前状态，返回到Follower的状态
 	currentTerm = requestVote.getTerm();
 
@@ -31,7 +31,7 @@ string Candidate::requestVote(string requestVoteCodedIntoString) {
 	// 生成下一状态机
 	nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
 		startAddress, commitIndex, lastApplied, logEntries);
-	return Answer(currentTerm, true).code();
+	return Answer{ currentTerm, true };
 }
 
 void Candidate::timeoutCounterThread() {
@@ -48,12 +48,12 @@ void Candidate::timeoutCounterThread() {
 
 // 接收AppendEntries，不需要重置计时器，leader中计时器只运行一段
 // 只要对方的term不比自己小就接受对方为leader
-string Candidate::appendEntries(string appendEntriesCodedIntoString) {
+Answer Candidate::appendEntries(string appendEntriesCodedIntoString) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	if (debug) cout << ID << " receive appendEntries Msg" << endl;
 	AppendEntries appendEntries(appendEntriesCodedIntoString);
 	// term没有比当前Candidate大，可以直接拒绝，并返回当前的term
-	if (appendEntries.getTerm() < currentTerm) return Answer(currentTerm, false).code();
+	if (appendEntries.getTerm() < currentTerm) return Answer{ currentTerm, false };
 	// term更新，则退出当前状态，返回到Follower的状态
 	currentTerm = appendEntries.getTerm();
 	// 将entries添加到当前列表中（调用函数，还需要判断其能否添加，这一步其实已经算是follower的工作了）
@@ -67,7 +67,7 @@ string Candidate::appendEntries(string appendEntriesCodedIntoString) {
 		nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
 			startAddress, commitIndex, lastApplied, logEntries);
 	}
-	return Answer(currentTerm, true).code();
+	return Answer{ currentTerm, true };
 }
 
 

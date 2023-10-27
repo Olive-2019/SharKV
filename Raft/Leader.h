@@ -44,8 +44,8 @@ public:
 	// 析构函数完成线程join和delete掉线程对象的任务
 	~Leader();
 	// 接收RequestVote
-	string requestVote(string requestVoteCodedIntoString);
+	Answer requestVote(string requestVoteCodedIntoString);
 	// 接收AppendEntries
-	string appendEntries(string appendEntriesCodedIntoString);
+	Answer appendEntries(string appendEntriesCodedIntoString);
 };
 

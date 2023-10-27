@@ -1,6 +1,6 @@
 #include "RPC.h"
 
-string RPC::invokeRemoteFunc(NetWorkAddress address, string funcName, string arg) {
+Answer RPC::invokeRemoteFunc(NetWorkAddress address, string funcName, string arg) {
     rpc_client client(address.first, address.second);// IP 地址，端口号
     /*设定超时 5s（不填默认为 3s），connect 超时返回 false，成功返回 true*/
     bool has_connected = client.connect(5);

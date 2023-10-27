@@ -41,9 +41,9 @@ public:
 		int votedFor = -1, int maxResendNum = 3);
 	~Candidate();
 	// 接收RequestVote
-	string requestVote(string requestVoteCodedIntoString);
+	Answer requestVote(string requestVoteCodedIntoString);
 	// 接收AppendEntries
-	string appendEntries(string appendEntriesCodedIntoString);
+	Answer appendEntries(string appendEntriesCodedIntoString);
 
 };
 

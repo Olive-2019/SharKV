@@ -104,10 +104,10 @@ public:
 	virtual void start(AppendEntries newEntries);
 
 	// 等待接收AppendEntries
-	virtual string appendEntries(string appendEntriesCodedIntoString) = 0;
+	virtual Answer appendEntries(string appendEntriesCodedIntoString) = 0;
 
 	// 投票线程RequestVote
-	virtual string requestVote(string requestVoteCodedIntoString) = 0;
+	virtual Answer requestVote(string requestVoteCodedIntoString) = 0;
 
 	// 运行该机器，返回值是下一个状态
 	virtual State* run();

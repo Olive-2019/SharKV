@@ -9,7 +9,7 @@ class RPC
 {
 public:
 	// µ÷ÓÃº¯Êı£¨×èÈû£©
-	string invokeRemoteFunc(NetWorkAddress address, string funcName, string arg);
+	Answer invokeRemoteFunc(NetWorkAddress address, string funcName, string arg);
 	
 };
 

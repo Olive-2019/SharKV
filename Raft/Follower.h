@@ -24,8 +24,8 @@ public:
 	// 重载start调用,转发给leader
 	void start(AppendEntries newEntries);
 	// 接收RequestVote
-	string requestVote(string requestVoteCodedIntoString);
+	Answer requestVote(string requestVoteCodedIntoString);
 	// 接收AppendEntries
-	string appendEntries(string appendEntriesCodedIntoString);
+	Answer appendEntries(string appendEntriesCodedIntoString);
 };
 
