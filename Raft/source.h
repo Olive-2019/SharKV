@@ -17,5 +17,6 @@ using std::endl;
 using std::cout;
 using std::vector;
 using std::shared_future;
+using std::future;
 using std::async;
 typedef pair<string, int> NetWorkAddress;

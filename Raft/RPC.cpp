@@ -18,6 +18,6 @@ string RPC::invokeRemoteFunc(NetWorkAddress address, string funcName, string arg
     catch (exception e) {
         cout << e.what() << endl;
     }
-    // cout << result << endl;
+    cout << "RPC::invokeRemoteFunc " << result << endl;
     return result;
 }

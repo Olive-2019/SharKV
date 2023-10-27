@@ -5,22 +5,6 @@ Leader::Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, Net
 	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, commitIndex, lastApplied, logEntries, votedFor),
     maxResendNum(maxResendNum){
 	
-	if (debug) cout << endl << ID << " become Leader" << endl;
-
-	// 读入集群中所有server的地址，leader读入AppendEntriesAddress的地址
-	ServerAddressReader serverAddressReader("AppendEntriesAddress.conf");
-	
-	serverAddress = serverAddressReader.getNetWorkAddresses();
-	// 上任的操作：发送心跳、初始化nextIndex和matchIndex
-	for (auto follower = serverAddress.begin(); follower != serverAddress.end(); ++follower) {
-		if (follower->first == ID) continue;
-		// 初始化next为当前log的最后一个
-		nextIndex[follower->first] = logEntries.size() - 1;
-		// 初始化matchAddress为-1
-		matchIndex[follower->first] = -1;
-		// 发送心跳信息(非阻塞)
-		sendAppendEntries(follower->first, nextIndex[follower->first], nextIndex[follower->first]);
-	}
 }
 Leader::~Leader() {
 	if (debug) cout << ID << " will not be Leader any more." << endl;
@@ -183,6 +167,25 @@ bool Leader::sendAppendEntries(int followerID) {
 
 //给其他所有进程同步log entries
 void Leader::work() {
+
+
+	if (debug) cout << endl << ID << " become Leader" << endl;
+
+	// 读入集群中所有server的地址，leader读入AppendEntriesAddress的地址
+	ServerAddressReader serverAddressReader("AppendEntriesAddress.conf");
+
+	serverAddress = serverAddressReader.getNetWorkAddresses();
+	// 上任的操作：发送心跳、初始化nextIndex和matchIndex
+	for (auto follower = serverAddress.begin(); follower != serverAddress.end(); ++follower) {
+		if (follower->first == ID) continue;
+		// 初始化next为当前log的最后一个
+		nextIndex[follower->first] = logEntries.size() - 1;
+		// 初始化matchAddress为-1
+		matchIndex[follower->first] = -1;
+		// 发送心跳信息(非阻塞)
+		sendAppendEntries(follower->first, nextIndex[follower->first], nextIndex[follower->first]);
+	}
+
 	// 用nextState作为同步信号量,超时/收到更新的信息的时候就可以退出了
 	while (!nextState) {
 		// 睡眠一段时间

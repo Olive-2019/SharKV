@@ -3,16 +3,11 @@ Follower::Follower(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,
 	NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor) :
 	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress,
 		commitIndex, lastApplied, logEntries, votedFor), leaderID(-1) {
-	if (debug) cout << endl << ID << " become Follower" << endl;
-	// 读入集群中所有server的地址，follower读入StartAddress的地址
-	ServerAddressReader serverAddressReader("StartAddress.conf");
-	serverAddress = serverAddressReader.getNetWorkAddresses();
-	// 开启计时器
-	timeoutThread = new thread(&Follower::timeoutCounterThread, this);
+	timeoutThread = NULL;
 }
 Follower::~Follower() {
 	timeoutCounter.stopCounter();
-	timeoutThread->join();
+	if (timeoutThread) timeoutThread->join();
 	delete timeoutThread;
 	if (debug) cout << ID << " will not be Follower any more." << endl;
 }
@@ -90,6 +85,14 @@ string Follower::appendEntries(string appendEntriesCodedIntoString) {
 	return Answer(currentTerm, true).code();
 }
 void Follower::work() {
+
+
+	if (debug) cout << endl << ID << " become Follower" << endl;
+	// 读入集群中所有server的地址，follower读入StartAddress的地址
+	ServerAddressReader serverAddressReader("StartAddress.conf");
+	serverAddress = serverAddressReader.getNetWorkAddresses();
+	// 开启计时器
+	timeoutThread = new thread(&Follower::timeoutCounterThread, this);
 	// 用nextState作为同步信号量,超时/收到更新的信息的时候就可以退出了
 	while (!nextState) {
 		// 睡眠一段时间

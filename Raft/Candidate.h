@@ -27,8 +27,6 @@ class Candidate : public State
 
 	// 检查单个follower，若成功则true，若不成功则尝试重发
 	bool checkOneFollowerReturnValue(int followerID, Answer& ans);
-	// 获取单个follower的返回值
-	Answer getOneFollowerReturnValue(int followerID);
 
 
 	// 检测投票结果，只有返回true时知道选举成功，返回false意味着未知数，选举失败靠appendEntries

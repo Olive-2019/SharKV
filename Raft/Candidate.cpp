@@ -4,27 +4,13 @@
 Candidate::Candidate(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
 	NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor, int maxResendNum) :
 	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, commitIndex, lastApplied, logEntries, votedFor), 
-	getVoteCounter(1), maxResendNum(maxResendNum), rejectCounter(0){
-	if (debug) cout << endl << ID << " become Candidate" << endl;
-	// 读入集群中所有server的地址，candidate读入RequestVoteAddress的地址
-	ServerAddressReader serverAddressReader("RequestVoteAddress.conf");
-	serverAddress = serverAddressReader.getNetWorkAddresses();
-	// 给自己投票
-	votedFor = ID;
-	// 初始化voteResult，并发送请求投票信息
-	for (auto follower = serverAddress.begin(); follower != serverAddress.end(); ++follower) {
-		int followerID = follower->first;
-		if (followerID == ID) continue;
-		voteResult[followerID] = 0;
-		sendRequestVote(followerID);
-	}
-	// 开启计时器
-	timeoutThread = new thread(&Candidate::timeoutCounterThread, this);
+	getVoteCounter(1), maxResendNum(maxResendNum), rejectCounter(0), timeoutThread(NULL){
+	
 }
 Candidate::~Candidate() {
 	timeoutCounter.stopCounter();
 	// join线程
-	timeoutThread->join();
+	if (timeoutThread) timeoutThread->join();
 	// 释放对象
 	delete timeoutThread;
 	if (debug) cout << ID << " will not be Candidate any more." << endl;
@@ -128,7 +114,8 @@ bool Candidate::sendRequestVote(int followerID) {
 	RequestVote requestVoteContent(currentTerm, ID, logEntries.size() - 1, logEntries.size() ? logEntries.back().getTerm() : -1);
 	// 异步调用 发送请求
 	followerReturnVal[followerID].push_back(
-		async(&RPC::invokeRemoteFunc, &rpc, serverAddress[followerID], "requestVote", requestVoteContent.code()));
+		async(&RPC::invokeRemoteFunc, &rpc, serverAddress[followerID], "requestVote", requestVoteContent.code())
+	);
 	if (debug) cout << "send requestVote to " << followerID << " content is " << requestVoteContent.code() << endl;
 }
 
@@ -138,13 +125,14 @@ bool Candidate::checkOneFollowerReturnValue(int followerID, Answer& ans) {
 	for (auto val = followerReturnVal[followerID].begin(); val != followerReturnVal[followerID].end(); ) {
 		future_status status = val->wait_for(seconds(0));
 		if (status == future_status::ready) {
+			timeoutCounter.setReceiveInfoFlag();
 			// 这个地方返回值为空字符串？但是follower输出有内容
 			string returnValStr = val->get();
-			// 不知道为啥返回值会是空，先硬跳过了
-			if (!returnValStr.size()) {
-				val = followerReturnVal[followerID].erase(val);
-				continue;
-			}
+			//// 不知道为啥返回值会是空，先硬跳过了
+			//if (!returnValStr.size()) {
+			//	val = followerReturnVal[followerID].erase(val);
+			//	continue;
+			//}
 			ans = Answer(returnValStr);
 			if (debug) cout << "Candidate::getOneFollowerReturnValue get return value from " << followerID << endl;
 			followerReturnVal[followerID].clear();
@@ -167,6 +155,22 @@ bool Candidate::checkVoteResult() {
 }
 
 void Candidate::work() {
+	if (debug) cout << endl << ID << " become Candidate" << endl;
+	// 读入集群中所有server的地址，candidate读入RequestVoteAddress的地址
+	ServerAddressReader serverAddressReader("RequestVoteAddress.conf");
+	serverAddress = serverAddressReader.getNetWorkAddresses();
+	// 给自己投票
+	votedFor = ID;
+	// 初始化voteResult，并发送请求投票信息
+	for (auto follower = serverAddress.begin(); follower != serverAddress.end(); ++follower) {
+		int followerID = follower->first;
+		if (followerID == ID) continue;
+		voteResult[followerID] = 0;
+		sendRequestVote(followerID);
+	}
+	// 开启计时器
+	timeoutThread = new thread(&Candidate::timeoutCounterThread, this);
+
 	while (!nextState) {
 		sleep_for(seconds(2));
 		if (!checkRequestVote()) {
