@@ -25,6 +25,9 @@ State::~State() {
 	delete requestVoteThread;
 }
 
+bool State::crush(double rate) const {
+	return TimeoutCounter().getRandom(0, 100) < 100 * rate;
+}
 
 
 // ×¢²áµÈ´ý½ÓÊÕAppendEntries

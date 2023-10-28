@@ -198,6 +198,8 @@ void Leader::work() {
 		sleep_for(seconds(15));
 		checkFollowers();
 		updateCommit();
+		// Ä£ÄâÍ£»ú
+		if (crush(0.7)) break;
 	}
 }
 

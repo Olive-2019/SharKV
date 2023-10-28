@@ -24,6 +24,7 @@ void Raft::run(int serverID, NetWorkAddress appendEntriesAddress, NetWorkAddress
 	while (state) {
 		State* nextState = state->run();
 		delete state;
+		if (!nextState) break;
 		state = nextState;
 	}
 }

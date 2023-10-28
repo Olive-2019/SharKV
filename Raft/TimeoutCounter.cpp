@@ -1,12 +1,14 @@
 #include "TimeoutCounter.h"
-//#include <Windows.h>
 TimeoutCounter::TimeoutCounter() {
 	receiveInfoFlag = false;
 	stop = false;
+	electionTimeouts = getRandom(3, 10);
+}
+int TimeoutCounter::getRandom(int start, int end) {
 	std::default_random_engine randomEngine;
 	randomEngine.seed(time(0));
-	std::uniform_int_distribution<int> u(3, 10); // ×ó±ÕÓÒ±ÕÇø¼ä
-	electionTimeouts = u(randomEngine);
+	std::uniform_int_distribution<int> u(start, end); // ×ó±ÕÓÒ±ÕÇø¼ä
+	return u(randomEngine);
 }
 void TimeoutCounter::setReceiveInfoFlag() {
 	flagLock.lock();

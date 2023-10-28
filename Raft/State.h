@@ -93,6 +93,9 @@ protected:
 
 	// debug输出开关
 	bool debug;
+
+	// 模拟服务器挂掉
+	bool crush(double rate) const;
 public:
 	// 构造函数完成初始化两个接收线程和计时器线程的任务
 	State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,NetWorkAddress requestVoteAddress, 
