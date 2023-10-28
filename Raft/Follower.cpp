@@ -27,12 +27,20 @@ bool Follower::isNewerThanMe(int lastLogIndex, int lastLogTerm) const {
 	if (logEntries.back().getTerm() == currentTerm) return logEntries.size() < lastLogIndex + 1;
 	return currentTerm < logEntries.back().getTerm();
 }
-void Follower::start(rpc_conn conn, AppendEntries newEntries) {
-	lock_guard<mutex> lockGuard(receiveInfoLock);
+StartAnswer Follower::start(rpc_conn conn, string command) {
+	// 不能在这加锁，否则其他线程都要等着转发start的返回值
+	//lock_guard<mutex> lockGuard(receiveInfoLock);
 	// 假如有leader，转发给leader，没有就给自己加
 	if (serverAddress.find(leaderID) != serverAddress.end())
-		rpc.invokeRemoteFunc(serverAddress[leaderID], "start", newEntries.code());
-	else State::start(conn, newEntries);
+		return rpc.invokeRemoteStart(serverAddress[leaderID], command);
+	
+	lock_guard<mutex> lockGuard(receiveInfoLock);
+	//将client给的数据加入当前列表中
+	logEntries.push_back(LogEntry(currentTerm, command));
+	// 有新增加的entries，更新lastApplied
+	lastApplied = logEntries.size() - 1;
+	return StartAnswer{ currentTerm, lastApplied };
+	
 }
 // 接收RequestVote
 Answer Follower::requestVote(rpc_conn conn, string requestVoteCodedIntoString) {

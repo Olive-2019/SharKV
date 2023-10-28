@@ -100,12 +100,13 @@ bool State::appendEntriesReal(int prevLogIndex, int prevLogTerm, int leaderCommi
 	return true;
 }
 
-void State::start(rpc_conn conn, AppendEntries newEntries) {
+StartAnswer State::start(rpc_conn conn, string command) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	//将client给的数据加入当前列表中
-	for (LogEntry entry : newEntries.getEntries()) logEntries.push_back(entry);
+	logEntries.push_back(LogEntry(currentTerm, command));
 	// 有新增加的entries，更新lastApplied
-	lastApplied += newEntries.getEntries().size();
+	lastApplied = logEntries.size() - 1;
+	return StartAnswer{ currentTerm, lastApplied };
 }
 State* State::run() {
 	registerServer();

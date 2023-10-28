@@ -6,6 +6,7 @@
 #include "RequestVote.h"
 #include "AppendEntries.h"
 #include "Answer.h"
+#include "StartAnswer.h"
 #include <thread>
 #include "RPC.h"
 #include "../rest_rpc/include/rest_rpc.hpp"
@@ -109,7 +110,7 @@ public:
 	int getCurrentTerm() const;
 
 	// start调用，leader和candidate添加一条新的entries，follower转发给leader
-	virtual void start(rpc_conn conn, AppendEntries newEntries);
+	virtual StartAnswer start(rpc_conn conn, string command);
 
 	// 等待接收AppendEntries
 	virtual Answer appendEntries(rpc_conn conn, string appendEntriesCodedIntoString) = 0;

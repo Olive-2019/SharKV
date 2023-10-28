@@ -96,8 +96,8 @@ bool Candidate::checkRequestVote() {
 		else {
 			follower->second = -1;
 			rejectCounter++;
-			if (answer.term > currentTerm || rejectCounter > serverAddress.size() / 2) {
-				if (answer.term > currentTerm) currentTerm = answer.term;
+			if (answer.term > currentTerm || rejectCounter > serverAddress.size() / 2)  {
+				currentTerm = answer.term;
 				nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress,
 					commitIndex, lastApplied, logEntries);
 				return true;

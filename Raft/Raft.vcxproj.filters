@@ -131,6 +131,9 @@
     <ClInclude Include="PersistenceInfoReaderAndWriter.h">
       <Filter>头文件\ORM</Filter>
     </ClInclude>
+    <ClInclude Include="StartAnswer.h">
+      <Filter>头文件\POJO</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Raft.rc">

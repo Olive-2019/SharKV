@@ -29,7 +29,7 @@ public:
 		int votedFor = -1);
 	~Follower();
 	// 重载start调用,转发给leader
-	void start(rpc_conn conn, AppendEntries newEntries);
+	StartAnswer start(rpc_conn conn, string command);
 	// 接收RequestVote
 	Answer requestVote(rpc_conn conn, string requestVoteCodedIntoString);
 	// 接收AppendEntries
