@@ -1,8 +1,8 @@
 #include "Leader.h"
 #include "Follower.h"
 Leader::Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
-	NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor, int maxResendNum) :
-	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, commitIndex, lastApplied, logEntries, votedFor),
+	NetWorkAddress startAddress, NetWorkAddress applyMessageAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor, int maxResendNum) :
+	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries, votedFor),
     maxResendNum(maxResendNum){
 	
 }
@@ -28,7 +28,7 @@ Answer Leader::requestVote(rpc_conn conn, string requestVoteCodedIntoString) {
 	if (nextState && nextState->getCurrentTerm() < currentTerm) delete nextState;
 	// 生成下一状态机
 	nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
-		startAddress, commitIndex, lastApplied, logEntries, votedFor = requestVote.getCandidateId());
+		startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries, votedFor = requestVote.getCandidateId());
 	if (debug) cout << "vote for " << requestVote.getCandidateId() << "." << endl;
 	return Answer{ currentTerm, true };
 }
@@ -52,7 +52,7 @@ Answer Leader::appendEntries(rpc_conn conn, string appendEntriesCodedIntoString)
 		delete nextState;
 		// 生成下一状态机
 		nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
-			startAddress, commitIndex, lastApplied, logEntries);
+			startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
 	}
 	return Answer{currentTerm, canAppend};
 }
@@ -74,7 +74,7 @@ void Leader::checkFollowers() {
 		// 返回值term更新，退为follower
 		if (answer.term > currentTerm) {
 			nextState = new Follower(answer.term, ID, appendEntriesAddress, requestVoteAddress,
-				startAddress, commitIndex, lastApplied, logEntries);
+				startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
 			return;
 		}
 		// 返回值为true：更新next和match，若next到头就发心跳
@@ -195,7 +195,7 @@ void Leader::work() {
 	// 用nextState作为同步信号量,超时/收到更新的信息的时候就可以退出了
 	while (!nextState) {
 		// 睡眠一段时间
-		sleep_for(seconds(15));
+		sleep_for(seconds(1));
 		checkFollowers();
 		updateCommit();
 		// 模拟停机

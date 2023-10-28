@@ -31,7 +31,6 @@ protected:
 	vector<LogEntry> logEntries;
 	//状态机id
 	int ID;
-
 	// 状态机用于接收start的ip和port
 	NetWorkAddress startAddress;
 	// 状态机用于接收appendEntries的ip和port
@@ -40,6 +39,8 @@ protected:
 	NetWorkAddress requestVoteAddress;
 	// 集群中各服务器的地址(leader用于发送AppendEntries，candidate用于发送requestVote，follower用于转发请求)
 	map<int, NetWorkAddress> serverAddress;
+	// 状态机用于发送applyMsg的地址
+	NetWorkAddress applyMessageAddress;
 
 
 	/*易失状态，不需要持久化*/
@@ -100,7 +101,7 @@ protected:
 public:
 	// 构造函数完成初始化两个接收线程和计时器线程的任务
 	State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,NetWorkAddress requestVoteAddress, 
-		NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor = -1, int handleNum = 10);
+		NetWorkAddress startAddress, NetWorkAddress applyMessageAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor = -1, int handleNum = 10);
 	// 析构函数完成线程join和delete掉线程对象的任务
 	virtual ~State();
 

@@ -20,6 +20,7 @@ int main(int argc, char* argv[]) {
 			cout << argv[2 + i * 2] << " " << argv[2 + i * 2 + 1] << endl;
 			addresses.push_back(getNetWorkAddress(argv[2 + i * 2], argv[2 + i * 2 + 1]));
 		}
+		addresses.push_back(getNetWorkAddress("127.0.0.1", "8001"));
 	}
 	else {
 		// 调试用传参
@@ -27,11 +28,12 @@ int main(int argc, char* argv[]) {
 		addresses.push_back(getNetWorkAddress("127.0.0.1", "8091"));
 		addresses.push_back(getNetWorkAddress("127.0.0.1", "8191"));
 		addresses.push_back(getNetWorkAddress("127.0.0.1", "8291"));
+		addresses.push_back(getNetWorkAddress("127.0.0.1", "8001"));
 	}
 	
 	Raft raft;
 	try {
-		raft.run(serverID, addresses[0], addresses[1], addresses[2]);
+		raft.run(serverID, addresses[0], addresses[1], addresses[2], addresses[3]);
 	}
 	catch (exception e) {
 		cout << e.what() << endl;

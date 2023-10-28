@@ -1,7 +1,7 @@
 #include "Follower.h"
 Follower::Follower(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
-	NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor) :
-	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress,
+	NetWorkAddress startAddress, NetWorkAddress applyMessageAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor) :
+	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, applyMessageAddress,
 		commitIndex, lastApplied, logEntries, votedFor), leaderID(-1) {
 	timeoutThread = NULL;
 }
@@ -15,7 +15,7 @@ void Follower::timeoutCounterThread() {
 	// 超时返回，转换到candidate
 	if (timeoutCounter.run()) {
 		nextState = new Candidate(currentTerm + 1, ID, appendEntriesAddress, requestVoteAddress,
-			startAddress, commitIndex, lastApplied, logEntries);
+			startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
 		if (debug) cout << "Follower " << ID << " timeout and quit." << endl;
 	}
 	else if (debug) cout << "Follower " << ID << " quit." << endl;
@@ -104,7 +104,7 @@ void Follower::work() {
 	// 用nextState作为同步信号量,超时/收到更新的信息的时候就可以退出了
 	while (!nextState) {
 		// 睡眠一段时间
-		sleep_for(seconds(2));
+		sleep_for(seconds(1));
 	}
 }
 

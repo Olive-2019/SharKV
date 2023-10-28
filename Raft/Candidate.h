@@ -45,7 +45,7 @@ class Candidate : public State
 	void registerHandleStart();
 public:
 	Candidate(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
-		NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries,
+		NetWorkAddress startAddress, NetWorkAddress applyMessageAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries,
 		int votedFor = -1, int maxResendNum = 3);
 	~Candidate();
 	// Ω” ’RequestVote

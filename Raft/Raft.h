@@ -18,6 +18,6 @@ public:
 	void applyMsg(string command, int index);
 	// 运行状态机，调用状态机接口切换状态
 	void run(int serverID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
-		 NetWorkAddress startAddress);
+		 NetWorkAddress startAddress, NetWorkAddress applyMessageAddress);
 };
 

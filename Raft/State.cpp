@@ -1,10 +1,11 @@
 #include "State.h"
 #include "Candidate.h"
 State::State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress, 
-	NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor, int handleNum):
+	NetWorkAddress startAddress, NetWorkAddress applyMessageAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries,
+	int votedFor, int handleNum):
 	currentTerm(currentTerm), ID(ID), appendEntriesAddress(appendEntriesAddress), votedFor(votedFor),  handleNum(handleNum), 
 	requestVoteAddress(requestVoteAddress), startAddress(startAddress), commitIndex(commitIndex), lastApplied(lastApplied),
-	logEntries(logEntries), nextState(NULL), debug(false){
+	logEntries(logEntries), nextState(NULL), debug(false), applyMessageAddress(applyMessageAddress) {
 	setDebug();
 	appendEntriesThread = requestVoteThread = startThread = NULL;
 }

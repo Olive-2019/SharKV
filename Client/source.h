@@ -6,6 +6,7 @@
 #include <sstream>
 #include <future>
 #include <string>
+#include <thread>
 using std::string;
 using std::to_string;
 using std::stringstream;
@@ -19,4 +20,5 @@ using std::vector;
 using std::shared_future;
 using std::future;
 using std::async;
+using std::thread;
 typedef pair<string, int> NetWorkAddress;

@@ -2,8 +2,8 @@
 #include "Follower.h"
 #include "Leader.h"
 Candidate::Candidate(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
-	NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor, int maxResendNum) :
-	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, commitIndex, lastApplied, logEntries, votedFor), 
+	NetWorkAddress startAddress, NetWorkAddress applyMessageAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor, int maxResendNum) :
+	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries, votedFor),
 	getVoteCounter(1), maxResendNum(maxResendNum), rejectCounter(0), timeoutThread(NULL){
 	
 }
@@ -30,7 +30,7 @@ Answer Candidate::requestVote(rpc_conn conn, string requestVoteCodedIntoString) 
 	if (nextState && nextState->getCurrentTerm() < currentTerm) delete nextState;
 	// 生成下一状态机
 	nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
-		startAddress, commitIndex, lastApplied, logEntries);
+		startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
 	return Answer{ currentTerm, true };
 }
 
@@ -38,7 +38,7 @@ void Candidate::timeoutCounterThread() {
 	// 超时返回，转换到candidate
 	if (timeoutCounter.run()) {
 		nextState = new Candidate(currentTerm + 1, ID, appendEntriesAddress, requestVoteAddress,
-			startAddress, commitIndex, lastApplied, logEntries);
+			startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
 		if (debug) cout << "Candidate " << ID << " timeout and quit." << endl;
 	}
 	else if (debug) cout << "Candidate " << ID << " quit." << endl;
@@ -65,7 +65,7 @@ Answer Candidate::appendEntries(rpc_conn conn, string appendEntriesCodedIntoStri
 		delete nextState;
 		// 生成下一状态机
 		nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
-			startAddress, commitIndex, lastApplied, logEntries);
+			startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
 	}
 	return Answer{ currentTerm, true };
 }
@@ -98,7 +98,7 @@ bool Candidate::checkRequestVote() {
 			rejectCounter++;
 			if (answer.term > currentTerm || rejectCounter > serverAddress.size() / 2)  {
 				currentTerm = answer.term;
-				nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress,
+				nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, applyMessageAddress,
 					commitIndex, lastApplied, logEntries);
 				return true;
 			}
@@ -171,17 +171,17 @@ void Candidate::work() {
 	timeoutThread = new thread(&Candidate::timeoutCounterThread, this);
 
 	while (!nextState) {
-		sleep_for(seconds(2));
+		sleep_for(seconds(1));
 		if (!checkRequestVote()) {
 			// 没有决出胜负，重开
 			nextState = new Candidate(currentTerm + 1, ID, appendEntriesAddress, requestVoteAddress,
-				startAddress, commitIndex, lastApplied, logEntries);
+				startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
 			return;
 		}
 		// 选举成功
 		if (checkVoteResult()) {
 			nextState = new Leader(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
-				startAddress, commitIndex, lastApplied, logEntries);
+				startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
 			return;
 		}
 	}
