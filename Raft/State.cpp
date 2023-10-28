@@ -30,10 +30,12 @@ State::~State() {
 // 注册等待接收AppendEntries
 void State::registerAppendEntries() {
 	appendEntriesRpcServer.reset(new rpc_server(appendEntriesAddress.second, handleNum));
-	appendEntriesRpcServer->register_handler("appendEntries", [this](rpc_conn conn,
+	registerHandleAppendEntries();
+	//appendEntriesRpcServer->register_handler("appendEntries", &State::appendEntries, this);
+	/*appendEntriesRpcServer->register_handler("appendEntries", [this](rpc_conn conn,
 		string appendEntriesCodedIntoString) {
 			this->appendEntries(std::move(appendEntriesCodedIntoString));
-		});
+		});*/
 	//appendEntriesRpcServer->register_handler("appendEntries", appendEntries);
 	appendEntriesRpcServer->run();//启动服务端
 	if (debug) cout << "State::registerAppendEntries close AppendEntries" << endl;
@@ -42,9 +44,11 @@ void State::registerAppendEntries() {
 // 注册投票线程RequestVote
 void State::registerRequestVote() {
 	requestVoteRpcServer.reset(new rpc_server(requestVoteAddress.second, handleNum));
-	requestVoteRpcServer->register_handler("requestVote", [this](rpc_conn conn, string requestVoteCodedIntoString) {
+	registerHandleRequestVote();
+	//requestVoteRpcServer->register_handler("requestVote", &State::requestVote, this);
+	/*requestVoteRpcServer->register_handler("requestVote", [this](rpc_conn conn, string requestVoteCodedIntoString) {
 			this->requestVote(std::move(requestVoteCodedIntoString));
-		});
+		});*/
 	requestVoteRpcServer->run();//启动服务端
 	if (debug) cout << "State::registerRequestVote close RequestVote" << endl;
 }
@@ -62,9 +66,10 @@ void State::registerServer() {
 void State::registerStart() {
 	startRpcServer.reset(nullptr);
 	startRpcServer.reset(new rpc_server(startAddress.second, handleNum));
-	startRpcServer->register_handler("start", [this](rpc_conn conn, string newEntries) {
+	registerHandleStart();
+	/*startRpcServer->register_handler("start", [this](rpc_conn conn, string newEntries) {
 		this->start(std::move(newEntries));
-		});
+		});*/
 	startRpcServer->run();//启动服务端
 	if (debug) cout << "State::registerStart close start" << endl;
 }
@@ -92,7 +97,7 @@ bool State::appendEntriesReal(int prevLogIndex, int prevLogTerm, int leaderCommi
 	return true;
 }
 
-void State::start(AppendEntries newEntries) {
+void State::start(rpc_conn conn, AppendEntries newEntries) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	//将client给的数据加入当前列表中
 	for (LogEntry entry : newEntries.getEntries()) logEntries.push_back(entry);

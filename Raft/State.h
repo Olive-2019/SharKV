@@ -75,11 +75,16 @@ protected:
 	void registerServer();
 	// 注册start函数
 	void registerStart();
+	// 注册start函数句柄
+	virtual void registerHandleStart() = 0;
 	// 注册等待接收AppendEntries
 	void registerAppendEntries();
+	// 注册等待接收AppendEntries句柄
+	virtual void registerHandleAppendEntries() = 0;
 	// 注册投票线程RequestVote
 	void registerRequestVote();
-
+	// 注册投票线程RequestVote句柄
+	virtual void registerHandleRequestVote() = 0;
 	
 	// 添加entries，返回值表示是否成功添加
 	bool appendEntriesReal(int prevLogIndex, int prevLogTerm, int leaderCommit, vector<LogEntry> entries);
@@ -101,13 +106,13 @@ public:
 	int getCurrentTerm() const;
 
 	// start调用，leader和candidate添加一条新的entries，follower转发给leader
-	virtual void start(AppendEntries newEntries);
+	virtual void start(rpc_conn conn, AppendEntries newEntries);
 
 	// 等待接收AppendEntries
-	virtual Answer appendEntries(string appendEntriesCodedIntoString) = 0;
+	virtual Answer appendEntries(rpc_conn conn, string appendEntriesCodedIntoString) = 0;
 
 	// 投票线程RequestVote
-	virtual Answer requestVote(string requestVoteCodedIntoString) = 0;
+	virtual Answer requestVote(rpc_conn conn, string requestVoteCodedIntoString) = 0;
 
 	// 运行该机器，返回值是下一个状态
 	virtual State* run();

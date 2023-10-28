@@ -11,14 +11,14 @@ Leader::~Leader() {
 }
 
 // 接收RequestVote
-string Leader::requestVote(string requestVoteCodedIntoString) {
+Answer Leader::requestVote(rpc_conn conn, string requestVoteCodedIntoString) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	RequestVote requestVote(requestVoteCodedIntoString);
 	if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << endl;
 	// term没有比当前leader大，可以直接拒绝，并返回当前的term
 	if (requestVote.getTerm() <= currentTerm) {
 		if (debug) cout << "reject " << requestVote.getCandidateId() << ", cause its term is old." << endl;
-		return Answer(currentTerm, false).code();
+		return Answer{ currentTerm, false };
 	}
 	// term更新，则退出当前状态，返回到Follower的状态
 	currentTerm = requestVote.getTerm();
@@ -30,10 +30,10 @@ string Leader::requestVote(string requestVoteCodedIntoString) {
 	nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
 		startAddress, commitIndex, lastApplied, logEntries, votedFor = requestVote.getCandidateId());
 	if (debug) cout << "vote for " << requestVote.getCandidateId() << "." << endl;
-	return Answer(currentTerm, true).code();
+	return Answer{ currentTerm, true };
 }
 // 接收AppendEntries
-string Leader::appendEntries(string appendEntriesCodedIntoString) {
+Answer Leader::appendEntries(rpc_conn conn, string appendEntriesCodedIntoString) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	if (debug) cout << ID << " receive appendEntries Msg" << endl;
 	AppendEntries appendEntries(appendEntriesCodedIntoString);
@@ -41,7 +41,7 @@ string Leader::appendEntries(string appendEntriesCodedIntoString) {
 	// term没有比当前leader大，可以直接拒绝，并返回当前的term
 	if (appendEntries.getTerm() <= currentTerm) {
 		if (debug) cout << "reject " << appendEntries.getLeaderId() << "'s appendEntries, cause its term is old." << endl;
-		return Answer(currentTerm, false).code();
+		return Answer{ currentTerm, false };
 	}
 	// term更新，则退出当前状态，返回到Follower的状态
 	currentTerm = appendEntries.getTerm();
@@ -53,8 +53,8 @@ string Leader::appendEntries(string appendEntriesCodedIntoString) {
 		// 生成下一状态机
 		nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
 			startAddress, commitIndex, lastApplied, logEntries);
-	} 
-	return Answer(currentTerm, canAppend).code();
+	}
+	return Answer{currentTerm, canAppend};
 }
 
 void Leader::checkFollowers() {
@@ -70,15 +70,15 @@ void Leader::checkFollowers() {
 		if (!checkOneFollowerReturnValue(followerID)) continue;
 		// 有返回值
 		Answer answer = getOneFollowerReturnValue(followerID);
-		if (debug) cout << "receive the return value of " << followerID << ", and its result is " << answer.getSuccess() << endl;
+		if (debug) cout << "receive the return value of " << followerID << ", and its result is " << answer.success << endl;
 		// 返回值term更新，退为follower
-		if (answer.getTerm() > currentTerm) {
-			nextState = new Follower(answer.getTerm(), ID, appendEntriesAddress, requestVoteAddress,
+		if (answer.term > currentTerm) {
+			nextState = new Follower(answer.term, ID, appendEntriesAddress, requestVoteAddress,
 				startAddress, commitIndex, lastApplied, logEntries);
 			return;
 		}
 		// 返回值为true：更新next和match，若next到头就发心跳
-		if (answer.getSuccess()) {
+		if (answer.success) {
 			// 上一条不是心跳，需要更新next和match
 			if (lastAppendEntries[followerID].getEntries().size()) {
 				nextIndex[followerID] = lastAppendEntries[followerID].getPrevLogIndex()
@@ -117,7 +117,7 @@ Answer Leader::getOneFollowerReturnValue(int followerID) {
 			return ans;
 		}
 	throw exception("Leader::getOneFollowerReturnValue Logical Error: didn't hava return value.");
-	return Answer(0, false);
+	return Answer{ 0, false };
 }
 
 void Leader::updateCommit() {
@@ -132,7 +132,10 @@ void Leader::updateCommit() {
 }
 void Leader::sendAppendEntries(int followerID, int start, int end) {
 	// 下标合法性判断
-	if (end >= logEntries.size() || start > end) throw exception("Leader::sendAppendEntries: index is illegal");
+	if (start >= 0 && (end >= logEntries.size() || start > end)) {
+		if (debug) cout << "Leader::sendAppendEntries: start " << start << " end " << end << " logEntries.size() " << logEntries.size() << endl;
+		throw exception("Leader::sendAppendEntries: index is illegal");
+	}
 	// follower id 合法性判断
 	if (followerID < 0 || serverAddress.find(followerID) == serverAddress.end()) throw exception("Leader::sendAppendEntries: followerID is illegal");
 	// 初始化appendEntries的内容
@@ -160,7 +163,8 @@ bool Leader::sendAppendEntries(int followerID) {
 	// 异步调用 发送请求
 	followerReturnVal[followerID].push_back(
 		async(&RPC::invokeRemoteFunc, &rpc, serverAddress[followerID], 
-			"appendEntries", lastAppendEntries[followerID].code()));
+			"appendEntries", lastAppendEntries[followerID].code())
+	);
 	if (debug) cout << "send appendEntries to " << followerID << endl;
 	return true;
 }
@@ -177,13 +181,15 @@ void Leader::work() {
 	serverAddress = serverAddressReader.getNetWorkAddresses();
 	// 上任的操作：发送心跳、初始化nextIndex和matchIndex
 	for (auto follower = serverAddress.begin(); follower != serverAddress.end(); ++follower) {
-		if (follower->first == ID) continue;
+		int followerID = follower->first;
+		// 不初始化自己
+		if (followerID == ID) continue;
 		// 初始化next为当前log的最后一个
-		nextIndex[follower->first] = logEntries.size() - 1;
+		nextIndex[followerID] = logEntries.size() - 1;
 		// 初始化matchAddress为-1
-		matchIndex[follower->first] = -1;
+		matchIndex[followerID] = -1;
 		// 发送心跳信息(非阻塞)
-		sendAppendEntries(follower->first, nextIndex[follower->first], nextIndex[follower->first]);
+		sendAppendEntries(followerID, nextIndex[followerID], nextIndex[followerID]);
 	}
 
 	// 用nextState作为同步信号量,超时/收到更新的信息的时候就可以退出了
@@ -193,4 +199,17 @@ void Leader::work() {
 		checkFollowers();
 		updateCommit();
 	}
+}
+
+// 注册等待接收AppendEntries句柄
+void Leader::registerHandleAppendEntries() {
+	appendEntriesRpcServer->register_handler("appendEntries", &Leader::appendEntries, this);
+}
+// 注册投票线程RequestVote句柄
+void Leader::registerHandleRequestVote() {
+	requestVoteRpcServer->register_handler("requestVote", &Leader::requestVote, this);
+}
+// 注册start函数句柄
+void Leader::registerHandleStart() {
+	startRpcServer->register_handler("start", &Leader::start, this);
 }

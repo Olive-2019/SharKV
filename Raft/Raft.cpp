@@ -18,6 +18,7 @@ void Raft::run(int serverID, NetWorkAddress appendEntriesAddress, NetWorkAddress
 	vector<LogEntry> entries = persistenceInfoReaderAndWriter.getEntries();
 	int lastApplied = entries.size() - 1;
 	// 从Follower开始循环
+	//currentTerm = 1;
 	state = new Follower(currentTerm, serverID, appendEntriesAddress, requestVoteAddress, 
 		startAddress, commitedIndex, lastApplied, entries, votedFor);
 	while (state) {

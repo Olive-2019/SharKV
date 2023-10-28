@@ -16,16 +16,23 @@ class Follower : public State
 	bool isNewerThanMe(int lastLogIndex, int lastLogTerm) const;
 	// 重载统一接口，在follower里面就是一个守护线程
 	void work();
+
+	// 注册等待接收AppendEntries句柄
+	void registerHandleAppendEntries();
+	// 注册投票线程RequestVote句柄
+	void registerHandleRequestVote();
+	// 注册start函数句柄
+	void registerHandleStart();
 public:
 	Follower(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
 		NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries,
 		int votedFor = -1);
 	~Follower();
 	// 重载start调用,转发给leader
-	void start(AppendEntries newEntries);
+	void start(rpc_conn conn, AppendEntries newEntries);
 	// 接收RequestVote
-	Answer requestVote(string requestVoteCodedIntoString);
+	Answer requestVote(rpc_conn conn, string requestVoteCodedIntoString);
 	// 接收AppendEntries
-	Answer appendEntries(string appendEntriesCodedIntoString);
+	Answer appendEntries(rpc_conn conn, string appendEntriesCodedIntoString);
 };
 

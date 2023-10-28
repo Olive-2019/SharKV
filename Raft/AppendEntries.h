@@ -3,6 +3,7 @@
 #include <sstream>
 #include "POJO.h"
 #include "LogEntry.h"
+#include <include/rest_rpc/rpc_client.hpp>
 #include <vector>
 using std::vector;
 using std::stringstream;
@@ -20,14 +21,15 @@ class AppendEntries : public POJO
 	int leaderCommit;
 	// 需要拷贝的多条log entry，心跳信息会是空
 	vector<LogEntry> entries;
+	//MSGPACK_DEFINE(term, leaderId, prevLogIndex);
 public:
-	AppendEntries() { cout << "when and why need this?" << endl; }
+	AppendEntries() { cout << "when and why need this? maybe initializing the map? but i can't find it" << endl; }
 	AppendEntries(int term, int leaderId, int prevLogIndex, int prevLogTerm, int leaderCommit, vector<LogEntry> entries);
 	// 反序列化
 	AppendEntries(string codedString);
 	// 序列化
 	string code() const;
-
+	MSGPACK_DEFINE(term, leaderId, prevLogIndex, prevLogTerm, leaderCommit, entries);
 	int getTerm()const { return term; }
 	int getLeaderId()const { return leaderId; }
 	int getPrevLogIndex()const { return prevLogIndex; }

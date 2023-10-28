@@ -27,15 +27,15 @@ bool Follower::isNewerThanMe(int lastLogIndex, int lastLogTerm) const {
 	if (logEntries.back().getTerm() == currentTerm) return logEntries.size() < lastLogIndex + 1;
 	return currentTerm < logEntries.back().getTerm();
 }
-void Follower::start(AppendEntries newEntries) {
+void Follower::start(rpc_conn conn, AppendEntries newEntries) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	// 假如有leader，转发给leader，没有就给自己加
 	if (serverAddress.find(leaderID) != serverAddress.end())
 		rpc.invokeRemoteFunc(serverAddress[leaderID], "start", newEntries.code());
-	else State::start(newEntries);
+	else State::start(conn, newEntries);
 }
 // 接收RequestVote
-Answer Follower::requestVote(string requestVoteCodedIntoString) {
+Answer Follower::requestVote(rpc_conn conn, string requestVoteCodedIntoString) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	RequestVote requestVote(requestVoteCodedIntoString);
 	if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << " content is " << requestVote.code() << endl;
@@ -49,10 +49,12 @@ Answer Follower::requestVote(string requestVoteCodedIntoString) {
 		votedFor = requestVote.getCandidateId();
 		vote = true;
 	}
+	if (debug) cout << "Follower::requestVote: send to " << requestVote.getCandidateId()
+		<< ", content is " << currentTerm << ' ' << vote << endl;
 	return Answer{ currentTerm, vote };
 }
 // 接收AppendEntries
-Answer Follower::appendEntries(string appendEntriesCodedIntoString) {
+Answer Follower::appendEntries(rpc_conn conn, string appendEntriesCodedIntoString) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	if (debug) cout << ID << " receive appendEntries Msg" << endl;
 	AppendEntries appendEntries(appendEntriesCodedIntoString);
@@ -96,4 +98,19 @@ void Follower::work() {
 		// 睡眠一段时间
 		sleep_for(seconds(2));
 	}
+}
+
+
+
+// 注册等待接收AppendEntries句柄
+void Follower::registerHandleAppendEntries() {
+	appendEntriesRpcServer->register_handler("appendEntries", &Follower::appendEntries, this);
+}
+// 注册投票线程RequestVote句柄
+void Follower::registerHandleRequestVote() {
+	requestVoteRpcServer->register_handler("requestVote", &Follower::requestVote, this);
+}
+// 注册start函数句柄
+void Follower::registerHandleStart() {
+	startRpcServer->register_handler("start", &Follower::start, this);
 }

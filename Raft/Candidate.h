@@ -33,17 +33,25 @@ class Candidate : public State
 	bool checkVoteResult();
 
 	// 用于异步接收心跳/返回值的future
-	map<int, vector<shared_future<string>>> followerReturnVal;
+	map<int, vector<shared_future<Answer>>> followerReturnVal;
+	// 最大的重发次数
 	int maxResendNum;
+
+	// 注册等待接收AppendEntries句柄
+	void registerHandleAppendEntries();
+	// 注册投票线程RequestVote句柄
+	void registerHandleRequestVote();
+	// 注册start函数句柄
+	void registerHandleStart();
 public:
 	Candidate(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
 		NetWorkAddress startAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries,
 		int votedFor = -1, int maxResendNum = 3);
 	~Candidate();
 	// 接收RequestVote
-	Answer requestVote(string requestVoteCodedIntoString);
+	Answer requestVote(rpc_conn conn, string requestVoteCodedIntoString);
 	// 接收AppendEntries
-	Answer appendEntries(string appendEntriesCodedIntoString);
+	Answer appendEntries(rpc_conn conn, string appendEntriesCodedIntoString);
 
 };
 

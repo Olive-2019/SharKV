@@ -16,7 +16,7 @@ Candidate::~Candidate() {
 	if (debug) cout << ID << " will not be Candidate any more." << endl;
 }
 // 接收RequestVote，不需要重置计时器，leader中计时器只运行一段
-Answer Candidate::requestVote(string requestVoteCodedIntoString) {
+Answer Candidate::requestVote(rpc_conn conn, string requestVoteCodedIntoString) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	RequestVote requestVote(requestVoteCodedIntoString);
 	if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << endl;
@@ -48,7 +48,7 @@ void Candidate::timeoutCounterThread() {
 
 // 接收AppendEntries，不需要重置计时器，leader中计时器只运行一段
 // 只要对方的term不比自己小就接受对方为leader
-Answer Candidate::appendEntries(string appendEntriesCodedIntoString) {
+Answer Candidate::appendEntries(rpc_conn conn, string appendEntriesCodedIntoString) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	if (debug) cout << ID << " receive appendEntries Msg" << endl;
 	AppendEntries appendEntries(appendEntriesCodedIntoString);
@@ -85,19 +85,19 @@ bool Candidate::checkRequestVote() {
 		if (follower->second) continue;
 		left = true;
 		int followerID = follower->first;
-		Answer answer(0, false);
+		Answer answer{ 0, false };
 		// 没有返回值：重发
 		if (!checkOneFollowerReturnValue(followerID, answer)) continue;
 		// 有返回值：更新voteResult和getVoteCounter
-		if (debug) cout << "receive the return value of " << followerID << ", and its result is " << answer.getSuccess() << endl;
+		if (debug) cout << "receive the return value of " << followerID << ", and its result is " << answer.success << endl;
 		// 收到投票，voteResult置为1
-		if (answer.getSuccess()) follower->second = 1, getVoteCounter++;
+		if (answer.success) follower->second = 1, getVoteCounter++;
 		// 没有收到合法投票，voteResult置为0
 		else {
 			follower->second = -1;
 			rejectCounter++;
-			if (answer.getTerm() > currentTerm || rejectCounter > serverAddress.size() / 2) {
-				if (answer.getTerm() > currentTerm) currentTerm = answer.getTerm();
+			if (answer.term > currentTerm || rejectCounter > serverAddress.size() / 2) {
+				if (answer.term > currentTerm) currentTerm = answer.term;
 				nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress,
 					commitIndex, lastApplied, logEntries);
 				return true;
@@ -127,13 +127,12 @@ bool Candidate::checkOneFollowerReturnValue(int followerID, Answer& ans) {
 		if (status == future_status::ready) {
 			timeoutCounter.setReceiveInfoFlag();
 			// 这个地方返回值为空字符串？但是follower输出有内容
-			string returnValStr = val->get();
+			ans = val->get();
 			//// 不知道为啥返回值会是空，先硬跳过了
 			//if (!returnValStr.size()) {
 			//	val = followerReturnVal[followerID].erase(val);
 			//	continue;
 			//}
-			ans = Answer(returnValStr);
 			if (debug) cout << "Candidate::getOneFollowerReturnValue get return value from " << followerID << endl;
 			followerReturnVal[followerID].clear();
 			return true;
@@ -188,3 +187,15 @@ void Candidate::work() {
 	}
 }
 
+// 注册等待接收AppendEntries句柄
+void Candidate::registerHandleAppendEntries() {
+	appendEntriesRpcServer->register_handler("appendEntries", &Candidate::appendEntries, this);
+}
+// 注册投票线程RequestVote句柄
+void Candidate::registerHandleRequestVote() {
+	requestVoteRpcServer->register_handler("requestVote", &Candidate::requestVote, this);
+}
+// 注册start函数句柄
+void Candidate::registerHandleStart() {
+	startRpcServer->register_handler("start", &Candidate::start, this);
+}

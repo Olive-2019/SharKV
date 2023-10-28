@@ -9,7 +9,7 @@ class Leader : public State
 	map<int, int> matchIndex;
 	
 	// 用于异步接收心跳/返回值的future
-	map<int, vector<shared_future<string>>> followerReturnVal;
+	map<int, vector<shared_future<Answer>>> followerReturnVal;
 	// 最大重发次数
 	int maxResendNum;
 
@@ -35,7 +35,13 @@ class Leader : public State
 	void sendAppendEntries(int followerID, int start, int end);
 	// 发指定follower的包，返回值代表还能不能发包（拿一步的AppendEntries重发）
 	bool sendAppendEntries(int followerID);
-	
+
+	// 注册等待接收AppendEntries句柄
+	void registerHandleAppendEntries();
+	// 注册投票线程RequestVote句柄
+	void registerHandleRequestVote();
+	// 注册start函数句柄
+	void registerHandleStart();
 	
 public:
 	Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
@@ -44,8 +50,8 @@ public:
 	// 析构函数完成线程join和delete掉线程对象的任务
 	~Leader();
 	// 接收RequestVote
-	Answer requestVote(string requestVoteCodedIntoString);
+	Answer requestVote(rpc_conn conn, string requestVoteCodedIntoString);
 	// 接收AppendEntries
-	Answer appendEntries(string appendEntriesCodedIntoString);
+	Answer appendEntries(rpc_conn conn, string appendEntriesCodedIntoString);
 };
 
