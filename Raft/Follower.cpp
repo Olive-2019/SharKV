@@ -66,9 +66,8 @@ Answer Follower::requestVote(rpc_conn conn, string requestVoteCodedIntoString) {
 Answer Follower::appendEntries(rpc_conn conn, string appendEntriesCodedIntoString) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	AppendEntries appendEntries(appendEntriesCodedIntoString);
-	if (debug) {
-		cout << "Follower::appendEntries : content " << appendEntriesCodedIntoString << endl;
-	}
+	if (debug) cout << "Follower::appendEntries : content " << appendEntriesCodedIntoString << endl;
+	if (debug) cout << "Follower::appendEntries : log entries size: " << appendEntries.getEntries().size();
 	// 超时计时器计数
 	timeoutCounter.setReceiveInfoFlag();
 	//直接返回false：term < currentTerm 
@@ -76,8 +75,8 @@ Answer Follower::appendEntries(rpc_conn conn, string appendEntriesCodedIntoStrin
 	// 心跳返回true
 	if (!appendEntries.getEntries().size()) return Answer{ currentTerm, true };
 	//直接返回false：prevLogIndex/Term对应的log不存在
-	if (appendEntries.getPrevLogIndex() >= logEntries.size()
-		|| logEntries[appendEntries.getPrevLogIndex()].getTerm() != appendEntries.getTerm())
+	if (appendEntries.getPrevLogIndex() >= 0 && (appendEntries.getPrevLogIndex() >= logEntries.size()
+		|| logEntries[appendEntries.getPrevLogIndex()].getTerm() != appendEntries.getTerm()))
 		return Answer{ currentTerm, false };
 	currentTerm = appendEntries.getTerm();
 		
@@ -96,6 +95,8 @@ Answer Follower::appendEntries(rpc_conn conn, string appendEntriesCodedIntoStrin
 		commitIndex = appendEntries.getLeaderCommit();
 		if (commitIndex > logEntries.size() - 1) commitIndex = logEntries.size() - 1;
 	}
+	if (debug) cout << "Follower::appendEntries real " << appendEntries.getEntries()[0].getCommand() << endl;
+
 	return Answer{ currentTerm, true };
 }
 void Follower::work() {

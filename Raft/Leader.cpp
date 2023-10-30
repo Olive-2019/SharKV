@@ -65,12 +65,13 @@ void Leader::checkFollowers() {
 		//  1.2 返回值为false：next--，重发一次
 		// 2. 无返回值：重发上一个包 
 	for (auto follower = nextIndex.begin(); follower != nextIndex.end(); ++follower) {
+		lock_guard<mutex> lockGuard(receiveInfoLock);
 		int followerID = follower->first;
 		// 无返回值：重发上一个包
 		if (!checkOneFollowerReturnValue(followerID)) continue;
 		// 有返回值
 		Answer answer = getOneFollowerReturnValue(followerID);
-		if (debug) cout << "appendEntries get value from " << followerID << " content: term " << answer.term << " success " << answer.success << endl;
+		//if (debug) cout << "appendEntries get value from " << followerID << " content: term " << answer.term << " success " << answer.success << endl;
 		// 返回值term更新，退为follower
 		if (answer.term > currentTerm) {
 			nextState = new Follower(answer.term, ID, appendEntriesAddress, requestVoteAddress,
@@ -86,10 +87,18 @@ void Leader::checkFollowers() {
 				matchIndex[followerID] = lastAppendEntries[followerID].getPrevLogIndex()
 					+ lastAppendEntries[followerID].getEntries().size();
 			}
-			// next到头了，需要发送心跳信息
-			if (nextIndex[followerID] >= logEntries.size()) sendAppendEntries(followerID, -1, -1);
-			// next没到头，将后续的都发过去
-			else sendAppendEntries(followerID, nextIndex[followerID], logEntries.size() - 1);
+			int logEntriesNum = logEntries.size();
+			// next到头了，需要发送心跳信息(这个地方的问题，执行逻辑貌似有问题，初步猜测是没有加锁导致的)
+			if (nextIndex[followerID] >= logEntriesNum) {
+				if (debug) cout << "Leader::checkFollowers nextIndex " << nextIndex[followerID] << " logEntries.size " << logEntriesNum << endl;
+				sendAppendEntries(followerID, -1, -1);
+			}
+			else {
+				// next没到头，将后续的都发过去
+				if (nextIndex[followerID] < 0) sendAppendEntries(followerID, 0, logEntries.size() - 1);
+				else sendAppendEntries(followerID, nextIndex[followerID], logEntries.size() - 1);
+			}
+			
 		}
 		// 返回值为false：next--，重发一次
 		else {
@@ -174,7 +183,7 @@ bool Leader::sendAppendEntries(int followerID) {
 		async(&RPC::invokeRemoteFunc, &rpc, serverAddress[followerID], 
 			"appendEntries", lastAppendEntries[followerID].code())
 	);
-	//if (debug) cout << "send appendEntries to " << followerID << endl;
+	if (debug) cout << "send appendEntries to " << followerID << " content size is " << lastAppendEntries[followerID].getEntries().size() << endl;
 	return true;
 }
 
