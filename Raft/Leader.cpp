@@ -70,7 +70,7 @@ void Leader::checkFollowers() {
 		// 无返回值：重发上一个包
 		if (!checkOneFollowerReturnValue(followerID)) continue;
 		// 有返回值
-		Answer answer = getOneFollowerReturnValue(followerID);
+		const Answer answer = getOneFollowerReturnValue(followerID);
 		//if (debug) cout << "appendEntries get value from " << followerID << " content: term " << answer.term << " success " << answer.success << endl;
 		// 返回值term更新，退为follower
 		if (answer.term > currentTerm) {
@@ -95,8 +95,8 @@ void Leader::checkFollowers() {
 			}
 			else {
 				// next没到头，将后续的都发过去
-				if (nextIndex[followerID] < 0) sendAppendEntries(followerID, 0, logEntries.size() - 1);
-				else sendAppendEntries(followerID, nextIndex[followerID], logEntries.size() - 1);
+				if (logEntries.size()) sendAppendEntries(followerID, 0, logEntries.size() - 1);
+				else sendAppendEntries(followerID, nextIndex[followerID], nextIndex[followerID]);
 			}
 			
 		}
@@ -104,7 +104,7 @@ void Leader::checkFollowers() {
 		else {
 			// needn't check the heartbreakt, cause if the heartbreak fail, it will be stop at the first one
 			nextIndex[followerID]--;
-			sendAppendEntries(followerID, nextIndex[followerID], nextIndex[followerID]);
+			sendAppendEntries(followerID, nextIndex[followerID], logEntries.size() - 1);
 		}
 	}
 }

@@ -27,6 +27,7 @@ string AppendEntries::code() const {
 		buff += to_string(entryBuff.size());
 		buff += " ";
 		buff += entryBuff;
+		buff += " ";
 	}
 	return buff;
 }

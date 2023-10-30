@@ -19,11 +19,18 @@ State::~State() {
 	if (appendEntriesThread) appendEntriesThread->join();
 	if (requestVoteThread) requestVoteThread->join();
 	if (startThread) startThread->join();
+	
 	// 释放线程对象
 	delete startThread;
 	// delete timeoutThread;
 	delete appendEntriesThread;
 	delete requestVoteThread;
+	PersistenceInfoReaderAndWriter persistenceInfoReaderAndWriter(ID);
+	persistenceInfoReaderAndWriter.setCurrentTerm(currentTerm);
+	persistenceInfoReaderAndWriter.setEntries(logEntries);
+	persistenceInfoReaderAndWriter.setVotedFor(votedFor);
+	persistenceInfoReaderAndWriter.write();
+
 }
 
 bool State::crush(double rate) const {
@@ -108,5 +115,6 @@ StartAnswer State::start(rpc_conn conn, string command) {
 State* State::run() {
 	registerServer();
 	work();
+	
 	return nextState;
 }

@@ -113,7 +113,11 @@ void Follower::work() {
 		// 睡眠一段时间
 		//if (debug) printState();
 		sleep_for(seconds(3));
-		
+		// 模拟停机
+		/*if (crush(0.1)) {
+			if (debug) cout << "crush" << endl;
+			break;
+		}*/
 	}
 }
 

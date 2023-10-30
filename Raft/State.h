@@ -9,6 +9,7 @@
 #include "StartAnswer.h"
 #include <thread>
 #include "RPC.h"
+#include "PersistenceInfoReaderAndWriter.h"
 #include "../rest_rpc/include/rest_rpc.hpp"
 using namespace rest_rpc::rpc_service;
 using std::unique_ptr;
