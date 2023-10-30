@@ -101,6 +101,9 @@ protected:
 
 	// 模拟服务器挂掉
 	bool crush(double rate) const;
+
+	// 持久化
+	void persistence() const;
 public:
 	// 构造函数完成初始化两个接收线程和计时器线程的任务
 	State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,NetWorkAddress requestVoteAddress, 
@@ -117,10 +120,10 @@ public:
 	virtual StartAnswer start(rpc_conn conn, string command);
 
 	// 等待接收AppendEntries
-	virtual Answer appendEntries(rpc_conn conn, string appendEntriesCodedIntoString) = 0;
+	virtual Answer appendEntries(rpc_conn conn, AppendEntries appendEntries) = 0;
 
 	// 投票线程RequestVote
-	virtual Answer requestVote(rpc_conn conn, string requestVoteCodedIntoString) = 0;
+	virtual Answer requestVote(rpc_conn conn, RequestVote requestVote) = 0;
 
 	// 运行该机器，返回值是下一个状态
 	virtual State* run();

@@ -49,9 +49,9 @@ public:
 		int votedFor = -1, int maxResendNum = 3);
 	~Candidate();
 	// 接收RequestVote
-	Answer requestVote(rpc_conn conn, string requestVoteCodedIntoString);
+	Answer requestVote(rpc_conn conn, RequestVote requestVote);
 	// 接收AppendEntries
-	Answer appendEntries(rpc_conn conn, string appendEntriesCodedIntoString);
+	Answer appendEntries(rpc_conn conn, AppendEntries appendEntries);
 
 };
 

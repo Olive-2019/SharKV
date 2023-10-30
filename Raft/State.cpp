@@ -25,17 +25,22 @@ State::~State() {
 	// delete timeoutThread;
 	delete appendEntriesThread;
 	delete requestVoteThread;
-	PersistenceInfoReaderAndWriter persistenceInfoReaderAndWriter(ID);
-	persistenceInfoReaderAndWriter.setCurrentTerm(currentTerm);
-	persistenceInfoReaderAndWriter.setEntries(logEntries);
-	persistenceInfoReaderAndWriter.setVotedFor(votedFor);
-	persistenceInfoReaderAndWriter.write();
 
 }
 
 bool State::crush(double rate) const {
 	return TimeoutCounter().getRandom(0, 100) < 100 * rate;
 }
+
+void State::persistence() const {
+	PersistenceInfoReaderAndWriter persistenceInfoReaderAndWriter(ID);
+	persistenceInfoReaderAndWriter.setCurrentTerm(currentTerm);
+	persistenceInfoReaderAndWriter.setEntries(logEntries);
+	persistenceInfoReaderAndWriter.setVotedFor(votedFor);
+	// 写磁盘动作异步执行，避免影响主线程
+	persistenceInfoReaderAndWriter.write();
+}
+
 void State::printState() {
 	cout << endl << endl;
 	cout << "There are " << logEntries.size() << " log entries in this state." << endl;

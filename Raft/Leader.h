@@ -54,8 +54,8 @@ public:
 	// 析构函数完成线程join和delete掉线程对象的任务
 	~Leader();
 	// 接收RequestVote
-	Answer requestVote(rpc_conn conn, string requestVoteCodedIntoString);
+	Answer requestVote(rpc_conn conn, RequestVote requestVote);
 	// 接收AppendEntries
-	Answer appendEntries(rpc_conn conn, string appendEntriesCodedIntoString);
+	Answer appendEntries(rpc_conn conn, AppendEntries appendEntries);
 };
 

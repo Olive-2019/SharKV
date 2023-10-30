@@ -2,6 +2,8 @@
 #include "source.h"
 #include "Answer.h"
 #include "StartAnswer.h"
+#include "AppendEntries.h"
+#include "RequestVote.h"
 #include "../rest_rpc/include/rest_rpc.hpp"
 using namespace rest_rpc::rpc_service;
 using namespace rest_rpc;
@@ -11,7 +13,11 @@ class RPC
 
 public:
 	// µ÷ÓÃº¯Êý£¨×èÈû£©
-	Answer invokeRemoteFunc(NetWorkAddress address, string funcName, string arg);
+	Answer invokeRequestVote(NetWorkAddress address, RequestVote requestVote);
+	Answer invokeAppendEntries(NetWorkAddress address, AppendEntries appendEntries);
+	
+	//Answer invokeRemoteFunc(NetWorkAddress address, string funcName, string arg);
+
 
 	StartAnswer invokeRemoteStart(NetWorkAddress address, string arg);
 

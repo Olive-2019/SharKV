@@ -44,9 +44,9 @@ StartAnswer Follower::start(rpc_conn conn, string command) {
 	
 }
 // 接收RequestVote
-Answer Follower::requestVote(rpc_conn conn, string requestVoteCodedIntoString) {
+Answer Follower::requestVote(rpc_conn conn, RequestVote requestVote) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
-	RequestVote requestVote(requestVoteCodedIntoString);
+	//RequestVote requestVote(requestVoteCodedIntoString);
 	//if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << " content is " << requestVote.code() << endl;
 	//直接返回false：term < currentTerm
 	if (requestVote.getTerm() < currentTerm) return Answer{currentTerm, false};
@@ -63,10 +63,10 @@ Answer Follower::requestVote(rpc_conn conn, string requestVoteCodedIntoString) {
 	return Answer{ currentTerm, vote };
 }
 // 接收AppendEntries
-Answer Follower::appendEntries(rpc_conn conn, string appendEntriesCodedIntoString) {
+Answer Follower::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
-	AppendEntries appendEntries(appendEntriesCodedIntoString);
-	if (debug) cout << "Follower::appendEntries : content " << appendEntriesCodedIntoString << endl;
+	//AppendEntries appendEntries(appendEntriesCodedIntoString);
+	//if (debug) cout << "Follower::appendEntries : content " << appendEntriesCodedIntoString << endl;
 	if (debug) cout << "Follower::appendEntries : log entries size: " << appendEntries.getEntries().size();
 	// 超时计时器计数
 	timeoutCounter.setReceiveInfoFlag();
@@ -111,7 +111,7 @@ void Follower::work() {
 	// 用nextState作为同步信号量,超时/收到更新的信息的时候就可以退出了
 	while (!nextState) {
 		// 睡眠一段时间
-		//if (debug) printState();
+		if (debug) printState();
 		sleep_for(seconds(3));
 		// 模拟停机
 		/*if (crush(0.1)) {

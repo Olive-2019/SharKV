@@ -9,6 +9,6 @@ protected:
 	//返回指定长度字符串，index会增加
 	string getSettedLenString(const string& buff, int& index, int size)const;
 public:
-	virtual string code() const  = 0;
+	//virtual string code() const  = 0;
 };
 

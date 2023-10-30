@@ -16,9 +16,9 @@ Candidate::~Candidate() {
 	if (debug) cout << ID << " will not be Candidate any more." << endl;
 }
 // 接收RequestVote，不需要重置计时器，leader中计时器只运行一段
-Answer Candidate::requestVote(rpc_conn conn, string requestVoteCodedIntoString) {
+Answer Candidate::requestVote(rpc_conn conn, RequestVote requestVote) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
-	RequestVote requestVote(requestVoteCodedIntoString);
+	//RequestVote requestVote(requestVoteCodedIntoString);
 	if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << endl;
 	// term没有比当前Candidate大，可以直接拒绝，并返回当前的term
 	if (requestVote.getTerm() <= currentTerm) return Answer{ currentTerm, false };
@@ -48,10 +48,10 @@ void Candidate::timeoutCounterThread() {
 
 // 接收AppendEntries，不需要重置计时器，leader中计时器只运行一段
 // 只要对方的term不比自己小就接受对方为leader
-Answer Candidate::appendEntries(rpc_conn conn, string appendEntriesCodedIntoString) {
+Answer Candidate::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	//if (debug) cout << ID << " receive appendEntries Msg" << endl;
-	AppendEntries appendEntries(appendEntriesCodedIntoString);
+	//AppendEntries appendEntries(appendEntriesCodedIntoString);
 	// term没有比当前Candidate大，可以直接拒绝，并返回当前的term
 	if (appendEntries.getTerm() < currentTerm) return Answer{ currentTerm, false };
 	// term更新，则退出当前状态，返回到Follower的状态
@@ -114,7 +114,7 @@ bool Candidate::sendRequestVote(int followerID) {
 	RequestVote requestVoteContent(currentTerm, ID, logEntries.size() - 1, logEntries.size() ? logEntries.back().getTerm() : -1);
 	// 异步调用 发送请求
 	followerReturnVal[followerID].push_back(
-		async(&RPC::invokeRemoteFunc, &rpc, serverAddress[followerID], "requestVote", requestVoteContent.code())
+		async(&RPC::invokeRequestVote, &rpc, serverAddress[followerID], requestVoteContent)
 	);
 	//if (debug) cout << "send requestVote to " << followerID << " content is " << requestVoteContent.code() << endl;
 }

@@ -11,9 +11,9 @@ Leader::~Leader() {
 }
 
 // 接收RequestVote
-Answer Leader::requestVote(rpc_conn conn, string requestVoteCodedIntoString) {
+Answer Leader::requestVote(rpc_conn conn, RequestVote requestVote) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
-	RequestVote requestVote(requestVoteCodedIntoString);
+	//RequestVote requestVote(requestVoteCodedIntoString);
 	if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << endl;
 	// term没有比当前leader大，可以直接拒绝，并返回当前的term
 	if (requestVote.getTerm() <= currentTerm) {
@@ -33,9 +33,9 @@ Answer Leader::requestVote(rpc_conn conn, string requestVoteCodedIntoString) {
 	return Answer{ currentTerm, true };
 }
 // 接收AppendEntries
-Answer Leader::appendEntries(rpc_conn conn, string appendEntriesCodedIntoString) {
+Answer Leader::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
-	AppendEntries appendEntries(appendEntriesCodedIntoString);
+	//AppendEntries appendEntries(appendEntriesCodedIntoString);
 	if (debug) cout << ID << " receive appendEntries Msg from " << appendEntries.getLeaderId() << endl;
 	// timeoutCounter.setReceiveInfoFlag();
 	// term没有比当前leader大，可以直接拒绝，并返回当前的term
@@ -180,8 +180,8 @@ bool Leader::sendAppendEntries(int followerID) {
 	if (followerReturnVal[followerID].size() >= maxResendNum) return false;
 	// 异步调用 发送请求
 	followerReturnVal[followerID].push_back(
-		async(&RPC::invokeRemoteFunc, &rpc, serverAddress[followerID], 
-			"appendEntries", lastAppendEntries[followerID].code())
+		async(&RPC::invokeAppendEntries, &rpc, serverAddress[followerID], 
+			lastAppendEntries[followerID])
 	);
 	if (debug) cout << "send appendEntries to " << followerID << " content size is " << lastAppendEntries[followerID].getEntries().size() << endl;
 	return true;

@@ -31,8 +31,8 @@ public:
 	// 重载start调用,转发给leader
 	StartAnswer start(rpc_conn conn, string command);
 	// 接收RequestVote
-	Answer requestVote(rpc_conn conn, string requestVoteCodedIntoString);
+	Answer requestVote(rpc_conn conn, RequestVote requestVote);
 	// 接收AppendEntries
-	Answer appendEntries(rpc_conn conn, string appendEntriesCodedIntoString);
+	Answer appendEntries(rpc_conn conn, AppendEntries appendEntries);
 };
 
