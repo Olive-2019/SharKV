@@ -39,9 +39,9 @@ void Candidate::timeoutCounterThread() {
 	if (timeoutCounter.run()) {
 		nextState = new Candidate(currentTerm + 1, ID, appendEntriesAddress, requestVoteAddress,
 			startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
-		if (debug) cout << "Candidate " << ID << " timeout and quit." << endl;
+		//if (debug) cout << "Candidate " << ID << " timeout and quit." << endl;
 	}
-	else if (debug) cout << "Candidate " << ID << " quit." << endl;
+	//else if (debug) cout << "Candidate " << ID << " quit." << endl;
 		
 	// 未超时，主动返回，将nextState的初始化留给stop的调用处
 }
@@ -50,7 +50,7 @@ void Candidate::timeoutCounterThread() {
 // 只要对方的term不比自己小就接受对方为leader
 Answer Candidate::appendEntries(rpc_conn conn, string appendEntriesCodedIntoString) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
-	if (debug) cout << ID << " receive appendEntries Msg" << endl;
+	//if (debug) cout << ID << " receive appendEntries Msg" << endl;
 	AppendEntries appendEntries(appendEntriesCodedIntoString);
 	// term没有比当前Candidate大，可以直接拒绝，并返回当前的term
 	if (appendEntries.getTerm() < currentTerm) return Answer{ currentTerm, false };
@@ -89,7 +89,7 @@ bool Candidate::checkRequestVote() {
 		// 没有返回值：重发
 		if (!checkOneFollowerReturnValue(followerID, answer)) continue;
 		// 有返回值：更新voteResult和getVoteCounter
-		if (debug) cout << "receive the return value of " << followerID << ", and its result is " << answer.success << endl;
+		//if (debug) cout << "receive the return value of " << followerID << ", and its result is " << answer.success << endl;
 		// 收到投票，voteResult置为1
 		if (answer.success) follower->second = 1, getVoteCounter++;
 		// 没有收到合法投票，voteResult置为0
@@ -116,7 +116,7 @@ bool Candidate::sendRequestVote(int followerID) {
 	followerReturnVal[followerID].push_back(
 		async(&RPC::invokeRemoteFunc, &rpc, serverAddress[followerID], "requestVote", requestVoteContent.code())
 	);
-	if (debug) cout << "send requestVote to " << followerID << " content is " << requestVoteContent.code() << endl;
+	//if (debug) cout << "send requestVote to " << followerID << " content is " << requestVoteContent.code() << endl;
 }
 
 // 检查单个follower，若成功则true，若不成功则尝试重发
@@ -133,7 +133,7 @@ bool Candidate::checkOneFollowerReturnValue(int followerID, Answer& ans) {
 			//	val = followerReturnVal[followerID].erase(val);
 			//	continue;
 			//}
-			if (debug) cout << "Candidate::getOneFollowerReturnValue get return value from " << followerID << endl;
+			//if (debug) cout << "Candidate::getOneFollowerReturnValue get return value from " << followerID << endl;
 			followerReturnVal[followerID].clear();
 			return true;
 		}
@@ -171,7 +171,7 @@ void Candidate::work() {
 	timeoutThread = new thread(&Candidate::timeoutCounterThread, this);
 
 	while (!nextState) {
-		sleep_for(seconds(1));
+		sleep_for(seconds(2));
 		if (!checkRequestVote()) {
 			// 没有决出胜负，重开
 			nextState = new Candidate(currentTerm + 1, ID, appendEntriesAddress, requestVoteAddress,

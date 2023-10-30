@@ -1,23 +1,21 @@
 #include "Raft.h"
-#include <include/rest_rpc/rpc_server.h>
-using namespace rest_rpc::rpc_service;
+using namespace std::chrono;
+using namespace std::this_thread;
 
 Raft::Raft(NetWorkAddress raftServerAddress, int applyMsgPort) : raftServerAddress(raftServerAddress),
 commitedIndex(-1), applyMsgPort(applyMsgPort), debug(false) {
-    applyMsgThread = new thread(registerApplyMsg, this);
+    applyMsgThread = new thread(&Raft::registerApplyMsg, this);
     setDebug();
 }
 Raft::~Raft() {
     applyMsgThread->join();
     delete applyMsgThread;
 }
-bool Raft::applyMsg(string command, int index) {
-    if (commands[index] == command) {
-        if (debug) cout << "Raft::applyMsg content:command " << command << " index " << index;
-        commitedIndex = index;
-        return true;
-    }
-    return false;
+void Raft::applyMsg(rpc_conn conn, string command, int index) {
+    //if (commands[index] == command) {
+    if (debug) cout << "Raft::applyMsg content:command " << command << " index " << index;
+    commitedIndex = index;
+    //}
 }
 void Raft::registerApplyMsg() {
     rpc_server server(applyMsgPort, 6);
@@ -42,7 +40,7 @@ StartAnswer Raft::start(string command) {
     catch (exception e) {
         cout << e.what() << endl;
     }
-    if (debug) cout << "Raft::start " << ans.term << ' ' << ans.index << endl;
+    if (debug) cout << "Raft::start commnad " << command << " term " << ans.term << " index " << ans.index << endl;
     return ans;
 }
 
@@ -51,8 +49,8 @@ void Raft::setDebug() {
 }
 void Raft::run() {
     for (int i = 1; i < 10; ++i) {
+        sleep_for(seconds(3));
         commands.push_back(to_string(i));
-        start(commands[i]);
-
+        StartAnswer ans = start(commands[i - 1]);
     }
 }

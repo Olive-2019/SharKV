@@ -23,7 +23,7 @@ class AppendEntries : public POJO
 	vector<LogEntry> entries;
 	//MSGPACK_DEFINE(term, leaderId, prevLogIndex);
 public:
-	AppendEntries() { cout << "when and why need this? maybe initializing the map? but i can't find it" << endl; }
+	AppendEntries() {  }
 	AppendEntries(int term, int leaderId, int prevLogIndex, int prevLogTerm, int leaderCommit, vector<LogEntry> entries);
 	// ∑¥–Ú¡–ªØ
 	AppendEntries(string codedString);

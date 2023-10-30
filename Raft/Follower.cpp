@@ -46,7 +46,7 @@ StartAnswer Follower::start(rpc_conn conn, string command) {
 Answer Follower::requestVote(rpc_conn conn, string requestVoteCodedIntoString) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	RequestVote requestVote(requestVoteCodedIntoString);
-	if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << " content is " << requestVote.code() << endl;
+	//if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << " content is " << requestVote.code() << endl;
 	//直接返回false：term < currentTerm
 	if (requestVote.getTerm() < currentTerm) return Answer{currentTerm, false};
 	currentTerm = requestVote.getTerm();
@@ -57,20 +57,31 @@ Answer Follower::requestVote(rpc_conn conn, string requestVoteCodedIntoString) {
 		votedFor = requestVote.getCandidateId();
 		vote = true;
 	}
-	if (debug) cout << "Follower::requestVote: send to " << requestVote.getCandidateId()
-		<< ", content is " << currentTerm << ' ' << vote << endl;
+	//if (debug) cout << "Follower::requestVote: send to " << requestVote.getCandidateId()
+		//<< ", content is " << currentTerm << ' ' << vote << endl;
 	return Answer{ currentTerm, vote };
 }
 // 接收AppendEntries
 Answer Follower::appendEntries(rpc_conn conn, string appendEntriesCodedIntoString) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
-	if (debug) cout << ID << " receive appendEntries Msg" << endl;
 	AppendEntries appendEntries(appendEntriesCodedIntoString);
+	if (debug) {
+		cout << "Follower::appendEntries : content " << appendEntriesCodedIntoString << endl;
+		/*cout << ID << " receive appendEntries Msg from " << appendEntries.getLeaderId() << endl;
+		cout << "content prevIndex: " << appendEntries.getPrevLogIndex() << " prevTerm" << appendEntries.getPrevLogTerm() << endl;
+		cout << "entries number:" << appendEntries.getEntries().size() << endl;
+		for (LogEntry entry : logEntries) {
+			cout << " command: " << entry.getCommand() << " term:" << entry.getTerm() << endl;
+		}*/
+	}
 	// 超时计时器计数
 	timeoutCounter.setReceiveInfoFlag();
-	//直接返回false：term < currentTerm or prevLogIndex/Term对应的log不存在
-	if ((appendEntries.getTerm() < currentTerm)
-		|| appendEntries.getPrevLogIndex() >= logEntries.size()
+	//直接返回false：term < currentTerm 
+	if (appendEntries.getTerm() < currentTerm) return Answer{ currentTerm, false };
+	// 心跳返回true
+	if (!appendEntries.getEntries().size()) return Answer{ currentTerm, true };
+	//直接返回false：prevLogIndex/Term对应的log不存在
+	if (appendEntries.getPrevLogIndex() >= logEntries.size()
 		|| logEntries[appendEntries.getPrevLogIndex()].getTerm() != appendEntries.getTerm())
 		return Answer{ currentTerm, false };
 	currentTerm = appendEntries.getTerm();
@@ -104,7 +115,9 @@ void Follower::work() {
 	// 用nextState作为同步信号量,超时/收到更新的信息的时候就可以退出了
 	while (!nextState) {
 		// 睡眠一段时间
-		sleep_for(seconds(1));
+		//if (debug) printState();
+		sleep_for(seconds(3));
+		
 	}
 }
 

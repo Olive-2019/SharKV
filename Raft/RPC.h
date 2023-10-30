@@ -14,5 +14,7 @@ public:
 	Answer invokeRemoteFunc(NetWorkAddress address, string funcName, string arg);
 
 	StartAnswer invokeRemoteStart(NetWorkAddress address, string arg);
+
+	void invokeRemoteApplyMsg(NetWorkAddress address, string command, int index);
 };
 

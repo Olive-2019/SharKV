@@ -35,8 +35,8 @@ Answer Leader::requestVote(rpc_conn conn, string requestVoteCodedIntoString) {
 // 接收AppendEntries
 Answer Leader::appendEntries(rpc_conn conn, string appendEntriesCodedIntoString) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
-	if (debug) cout << ID << " receive appendEntries Msg" << endl;
 	AppendEntries appendEntries(appendEntriesCodedIntoString);
+	if (debug) cout << ID << " receive appendEntries Msg from " << appendEntries.getLeaderId() << endl;
 	// timeoutCounter.setReceiveInfoFlag();
 	// term没有比当前leader大，可以直接拒绝，并返回当前的term
 	if (appendEntries.getTerm() <= currentTerm) {
@@ -70,7 +70,7 @@ void Leader::checkFollowers() {
 		if (!checkOneFollowerReturnValue(followerID)) continue;
 		// 有返回值
 		Answer answer = getOneFollowerReturnValue(followerID);
-		if (debug) cout << "receive the return value of " << followerID << ", and its result is " << answer.success << endl;
+		if (debug) cout << "appendEntries get value from " << followerID << " content: term " << answer.term << " success " << answer.success << endl;
 		// 返回值term更新，退为follower
 		if (answer.term > currentTerm) {
 			nextState = new Follower(answer.term, ID, appendEntriesAddress, requestVoteAddress,
@@ -126,10 +126,19 @@ void Leader::updateCommit() {
 		int counter = 0;
 		for (auto it = matchIndex.begin(); it != matchIndex.end(); ++it)
 			if (commitIndex + 1 >= it->second) counter++;
-		if (counter > matchIndex.size() / 2) commitIndex++;
+			else break;
+		if (counter + 1 > matchIndex.size() / 2) commitIndex++;
 		else break;
 	}
+	if (commitIndex >= logEntries.size()) commitIndex = logEntries.size() - 1;
+	applyMsg();
 }
+void Leader::applyMsg() {
+	//if (debug) cout << "Leader::applyMsg content logEntries.size() " << logEntries.size() << " commitIndex " << commitIndex << endl;
+	if (commitIndex < 0 || commitIndex >= logEntries.size()) return;
+	rpc.invokeRemoteApplyMsg(applyMessageAddress, logEntries[commitIndex].getCommand(), commitIndex);
+}
+
 void Leader::sendAppendEntries(int followerID, int start, int end) {
 	// 下标合法性判断
 	if (start >= 0 && (end >= logEntries.size() || start > end)) {
@@ -165,7 +174,7 @@ bool Leader::sendAppendEntries(int followerID) {
 		async(&RPC::invokeRemoteFunc, &rpc, serverAddress[followerID], 
 			"appendEntries", lastAppendEntries[followerID].code())
 	);
-	if (debug) cout << "send appendEntries to " << followerID << endl;
+	//if (debug) cout << "send appendEntries to " << followerID << endl;
 	return true;
 }
 
@@ -173,7 +182,7 @@ bool Leader::sendAppendEntries(int followerID) {
 void Leader::work() {
 
 
-	if (debug) cout << endl << ID << " become Leader" << endl;
+	if (debug) cout << endl << ID << " work as Leader" << endl;
 
 	// 读入集群中所有server的地址，leader读入AppendEntriesAddress的地址
 	ServerAddressReader serverAddressReader("AppendEntriesAddress.conf");
@@ -195,11 +204,11 @@ void Leader::work() {
 	// 用nextState作为同步信号量,超时/收到更新的信息的时候就可以退出了
 	while (!nextState) {
 		// 睡眠一段时间
-		sleep_for(seconds(1));
+		sleep_for(seconds(2));
 		checkFollowers();
 		updateCommit();
 		// 模拟停机
-		if (crush(0.7)) break;
+		//if (crush(0.7)) break;
 	}
 }
 

@@ -7,6 +7,9 @@
 #include <future>
 #include <string>
 #include <thread>
+
+#include <include/rest_rpc/rpc_server.h>
+using namespace rest_rpc::rpc_service;
 using std::string;
 using std::to_string;
 using std::stringstream;

@@ -24,6 +24,10 @@ class Leader : public State
 	void work();
 	// 更新commitIndex
 	void updateCommit();
+	// 发送更新的commit信息
+	void applyMsg();
+
+
 	// 检测所有follower，重发或新发包
 	void checkFollowers();
 	// 检查单个follower，若成功则true，若不成功则尝试重发

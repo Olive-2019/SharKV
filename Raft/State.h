@@ -95,6 +95,8 @@ protected:
 
 	// debug输出开关
 	bool debug;
+	// 打印状态信息
+	void printState();
 
 	// 模拟服务器挂掉
 	bool crush(double rate) const;
