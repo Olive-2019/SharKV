@@ -18,7 +18,7 @@ Answer Leader::requestVote(rpc_conn conn, RequestVote requestVote) {
 	// term没有比当前leader大，可以直接拒绝，并返回当前的term
 	if (requestVote.getTerm() <= currentTerm) {
 		if (debug) cout << "reject " << requestVote.getCandidateId() << ", cause its term is old." << endl;
-		return Answer{ currentTerm, false };
+		return Answer( currentTerm, false );
 	}
 	// term更新，则退出当前状态，返回到Follower的状态
 	currentTerm = requestVote.getTerm();
@@ -30,7 +30,7 @@ Answer Leader::requestVote(rpc_conn conn, RequestVote requestVote) {
 	nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
 		startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries, votedFor = requestVote.getCandidateId());
 	if (debug) cout << "vote for " << requestVote.getCandidateId() << "." << endl;
-	return Answer{ currentTerm, true };
+	return Answer( currentTerm, true );
 }
 // 接收AppendEntries
 Answer Leader::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
@@ -41,7 +41,7 @@ Answer Leader::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 	// term没有比当前leader大，可以直接拒绝，并返回当前的term
 	if (appendEntries.getTerm() <= currentTerm) {
 		if (debug) cout << "reject " << appendEntries.getLeaderId() << "'s appendEntries, cause its term is old." << endl;
-		return Answer{ currentTerm, false };
+		return Answer( currentTerm, false );
 	}
 	// term更新，则退出当前状态，返回到Follower的状态
 	currentTerm = appendEntries.getTerm();
@@ -54,7 +54,7 @@ Answer Leader::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 		nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
 			startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
 	}
-	return Answer{currentTerm, canAppend};
+	return Answer(currentTerm, canAppend);
 }
 
 void Leader::checkFollowers() {
@@ -73,13 +73,13 @@ void Leader::checkFollowers() {
 		const Answer answer = getOneFollowerReturnValue(followerID);
 		//if (debug) cout << "appendEntries get value from " << followerID << " content: term " << answer.term << " success " << answer.success << endl;
 		// 返回值term更新，退为follower
-		if (answer.term > currentTerm) {
-			nextState = new Follower(answer.term, ID, appendEntriesAddress, requestVoteAddress,
+		if (answer.getTerm() > currentTerm) {
+			nextState = new Follower(answer.getTerm(), ID, appendEntriesAddress, requestVoteAddress,
 				startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
 			return;
 		}
 		// 返回值为true：更新next和match，若next到头就发心跳
-		if (answer.success) {
+		if (answer.isSuccess()) {
 			// 上一条不是心跳，需要更新next和match
 			if (lastAppendEntries[followerID].getEntries().size()) {
 				nextIndex[followerID] = lastAppendEntries[followerID].getPrevLogIndex()
@@ -95,8 +95,8 @@ void Leader::checkFollowers() {
 			}
 			else {
 				// next没到头，将后续的都发过去
-				if (logEntries.size()) sendAppendEntries(followerID, 0, logEntries.size() - 1);
-				else sendAppendEntries(followerID, nextIndex[followerID], nextIndex[followerID]);
+				if (logEntries.size()) sendAppendEntries(followerID, nextIndex[followerID], logEntries.size() - 1);
+				else sendAppendEntries(followerID, -1, -1);
 			}
 			
 		}
@@ -233,4 +233,24 @@ void Leader::registerHandleRequestVote() {
 // 注册start函数句柄
 void Leader::registerHandleStart() {
 	startRpcServer->register_handler("start", &Leader::start, this);
+}
+
+void Leader::snapShot() {
+	// 通知每一个系统存快照，若半数以上通过则存
+
+	snapShotModifyState();
+}
+
+
+void Leader::snapShotModifyState() {
+	lock_guard<mutex> lockGuard(receiveInfoLock);
+	logEntries.clear();
+	for (auto follower = nextIndex.begin(); follower != nextIndex.end(); ++follower) {
+		int followerID = follower->first;
+		// 重置next为当前log的最后一个，即-1
+		nextIndex[followerID] = - 1;
+		// 重置matchAddress为-1
+		matchIndex[followerID] = -1;
+		// TODO:通知每一个follower要存快照了
+	}
 }

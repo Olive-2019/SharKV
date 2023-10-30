@@ -61,7 +61,7 @@ StartAnswer RPC::invokeRemoteStart(NetWorkAddress address, string arg) {
     /*设定超时 5s（不填默认为 3s），connect 超时返回 false，成功返回 true*/
     bool has_connected = client.connect(5);
     /*没有建立连接则退出程序*/
-    if (!has_connected) throw exception("RPC::invokeRemoteFunc can't connect");
+    if (!has_connected) throw exception("RPC::invokeRemoteStart can't connect");
 
     /*调用远程服务，返回欢迎信息*/
     /*if (funcName == "requestVote") {
@@ -83,7 +83,7 @@ void RPC::invokeRemoteApplyMsg(NetWorkAddress address, string command, int index
     /*设定超时 5s（不填默认为 3s），connect 超时返回 false，成功返回 true*/
     bool has_connected = client.connect(5);
     /*没有建立连接则退出程序*/
-    if (!has_connected) throw exception("RPC::invokeRemoteFunc can't connect");
+    if (!has_connected) throw exception("RPC::invokeRemoteApplyMsg can't connect");
 
     /*调用远程服务，返回欢迎信息*/
     /*if (funcName == "requestVote") {

@@ -25,10 +25,6 @@ class AppendEntries : public POJO
 public:
 	AppendEntries() {  }
 	AppendEntries(int term, int leaderId, int prevLogIndex, int prevLogTerm, int leaderCommit, vector<LogEntry> entries);
-	//// 反序列化
-	//AppendEntries(string codedString);
-	//// 序列化
-	//string code() const;
 	MSGPACK_DEFINE(term, leaderId, prevLogIndex, prevLogTerm, leaderCommit, entries);
 	int getTerm()const { return term; }
 	int getLeaderId()const { return leaderId; }

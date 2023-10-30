@@ -49,7 +49,7 @@ Answer Follower::requestVote(rpc_conn conn, RequestVote requestVote) {
 	//RequestVote requestVote(requestVoteCodedIntoString);
 	//if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << " content is " << requestVote.code() << endl;
 	//直接返回false：term < currentTerm
-	if (requestVote.getTerm() < currentTerm) return Answer{currentTerm, false};
+	if (requestVote.getTerm() < currentTerm) return Answer(currentTerm, false);
 	currentTerm = requestVote.getTerm();
 	//如果 （votedFor == null || votedFor == candidateId） && candidate的log比当前节点新，投票给该节点，否则拒绝该节点
 	bool vote = false;
@@ -60,7 +60,7 @@ Answer Follower::requestVote(rpc_conn conn, RequestVote requestVote) {
 	}
 	//if (debug) cout << "Follower::requestVote: send to " << requestVote.getCandidateId()
 		//<< ", content is " << currentTerm << ' ' << vote << endl;
-	return Answer{ currentTerm, vote };
+	return Answer(currentTerm, vote);
 }
 // 接收AppendEntries
 Answer Follower::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
@@ -71,13 +71,13 @@ Answer Follower::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 	// 超时计时器计数
 	timeoutCounter.setReceiveInfoFlag();
 	//直接返回false：term < currentTerm 
-	if (appendEntries.getTerm() < currentTerm) return Answer{ currentTerm, false };
+	if (appendEntries.getTerm() < currentTerm) return Answer(currentTerm, false);
 	// 心跳返回true
-	if (!appendEntries.getEntries().size()) return Answer{ currentTerm, true };
+	if (!appendEntries.getEntries().size()) return Answer(currentTerm, true);
 	//直接返回false：prevLogIndex/Term对应的log不存在
 	if (appendEntries.getPrevLogIndex() >= 0 && (appendEntries.getPrevLogIndex() >= logEntries.size()
 		|| logEntries[appendEntries.getPrevLogIndex()].getTerm() != appendEntries.getTerm()))
-		return Answer{ currentTerm, false };
+		return Answer(currentTerm, false);
 	currentTerm = appendEntries.getTerm();
 		
 	int index = appendEntries.getPrevLogIndex() + 1;
@@ -90,14 +90,15 @@ Answer Follower::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 		else logEntries.push_back(entry);
 		index++;
 	}
-	//当leaderCommit > commitIndex时，更新commitIndex = min(leaderCommit, 目前最新entry的index)
-	if (appendEntries.getLeaderCommit() > commitIndex) {
-		commitIndex = appendEntries.getLeaderCommit();
-		if (commitIndex > logEntries.size() - 1) commitIndex = logEntries.size() - 1;
-	}
+	commitIndex = appendEntries.getLeaderCommit();
+	////当leaderCommit > commitIndex时，更新commitIndex = min(leaderCommit, 目前最新entry的index)
+	//if (appendEntries.getLeaderCommit() > commitIndex) {
+	//	commitIndex = appendEntries.getLeaderCommit();
+	//	if (commitIndex > logEntries.size() - 1) commitIndex = logEntries.size() - 1;
+	//}
 	if (debug) cout << "Follower::appendEntries real " << appendEntries.getEntries()[0].getCommand() << endl;
 
-	return Answer{ currentTerm, true };
+	return Answer( currentTerm, true );
 }
 void Follower::work() {
 
