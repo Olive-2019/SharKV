@@ -184,6 +184,7 @@ void Candidate::work() {
 				startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
 			return;
 		}
+		persistence();
 	}
 }
 

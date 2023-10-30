@@ -34,23 +34,23 @@ StartAnswer Raft::start(string command) {
     /*调用远程服务，返回欢迎信息*/
     StartAnswer ans;
     try {
-        auto result = client.call<StartAnswer>("start", command);// funcName 为事先注册好的服务名，需要一个 arg 参数
-        ans = result;
+        StartAnswer ans = client.call<StartAnswer>("start", command);// funcName 为事先注册好的服务名，需要一个 arg 参数
+        if (debug) cout << "Raft::start commnad " << command << " term " << ans.term << " index " << ans.index << endl;
+        return ans;
     }
     catch (exception e) {
         cout << e.what() << endl;
     }
-    if (debug) cout << "Raft::start commnad " << command << " term " << ans.term << " index " << ans.index << endl;
-    return ans;
 }
 
 void Raft::setDebug() {
     debug = true;
 }
 void Raft::run() {
-    for (int i = 1; i < 10; ++i) {
+    vector<string> commands({ "Lam", "somebody", "55190906", "55190922" });
+    for (string command : commands) {
         sleep_for(seconds(3));
-        commands.push_back("Lam " + to_string(i));
-        StartAnswer ans = start(commands[i - 1]);
+        if (debug) cout << "Raft::run " << command << endl;
+        StartAnswer ans = start(command);
     }
 }

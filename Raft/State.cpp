@@ -38,7 +38,8 @@ void State::persistence() const {
 	persistenceInfoReaderAndWriter.setEntries(logEntries);
 	persistenceInfoReaderAndWriter.setVotedFor(votedFor);
 	// 写磁盘动作异步执行，避免影响主线程
-	persistenceInfoReaderAndWriter.write();
+	async(&PersistenceInfoReaderAndWriter::write, &persistenceInfoReaderAndWriter);
+	//persistenceInfoReaderAndWriter.write();
 }
 
 void State::printState() {

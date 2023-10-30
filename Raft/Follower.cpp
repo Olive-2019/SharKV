@@ -67,7 +67,7 @@ Answer Follower::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	//AppendEntries appendEntries(appendEntriesCodedIntoString);
 	//if (debug) cout << "Follower::appendEntries : content " << appendEntriesCodedIntoString << endl;
-	if (debug) cout << "Follower::appendEntries : log entries size: " << appendEntries.getEntries().size();
+	if (debug) cout << "Follower::appendEntries from " << appendEntries.getLeaderId() <<  " : log entries size: " << appendEntries.getEntries().size();
 	// 超时计时器计数
 	timeoutCounter.setReceiveInfoFlag();
 	//直接返回false：term < currentTerm 
@@ -113,6 +113,7 @@ void Follower::work() {
 		// 睡眠一段时间
 		if (debug) printState();
 		sleep_for(seconds(3));
+		persistence();
 		// 模拟停机
 		/*if (crush(0.1)) {
 			if (debug) cout << "crush" << endl;

@@ -216,6 +216,7 @@ void Leader::work() {
 		sleep_for(seconds(2));
 		checkFollowers();
 		updateCommit();
+		persistence();
 		// Ä£ÄâÍ£»ú
 		//if (crush(0.7)) break;
 	}
