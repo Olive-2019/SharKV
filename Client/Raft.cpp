@@ -50,7 +50,7 @@ void Raft::setDebug() {
 void Raft::run() {
     for (int i = 1; i < 10; ++i) {
         sleep_for(seconds(3));
-        commands.push_back(to_string(i));
+        commands.push_back("Lam " + to_string(i));
         StartAnswer ans = start(commands[i - 1]);
     }
 }

@@ -3,6 +3,7 @@ ServerAddressReader::ServerAddressReader(string filePath) : FileOperator(filePat
 
 pair<int, NetWorkAddress> ServerAddressReader::getOneNetWorkAddress() {
 	string buff = getOneRaw();
+	if (!buff.size()) return pair<int, NetWorkAddress>(-1, NetWorkAddress("", -1));
 	stringstream ss(buff);
 	int ID;
 	NetWorkAddress networkAddress;
@@ -17,6 +18,7 @@ map<int, NetWorkAddress> ServerAddressReader::getNetWorkAddresses() {
 	
 	while (!isEnd()) {
 		pair<int, NetWorkAddress> oneAddress = getOneNetWorkAddress();
+		if (oneAddress.first < 0) break;
 		IDToNetWorkAddress.insert(oneAddress);
 	}
 	return IDToNetWorkAddress;

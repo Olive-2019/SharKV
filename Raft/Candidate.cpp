@@ -5,7 +5,7 @@ Candidate::Candidate(int currentTerm, int ID, NetWorkAddress appendEntriesAddres
 	NetWorkAddress startAddress, NetWorkAddress applyMessageAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor, int maxResendNum) :
 	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries, votedFor),
 	getVoteCounter(1), maxResendNum(maxResendNum), rejectCounter(0), timeoutThread(NULL){
-	
+	if (debug) cout << "Candidate::Candidate new a Candidate" << endl;
 }
 Candidate::~Candidate() {
 	timeoutCounter.stopCounter();

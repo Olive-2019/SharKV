@@ -4,7 +4,7 @@ Leader::Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, Net
 	NetWorkAddress startAddress, NetWorkAddress applyMessageAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor, int maxResendNum) :
 	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries, votedFor),
     maxResendNum(maxResendNum){
-	
+	if (debug) cout << "Leader::Leader new a leader" << endl;
 }
 Leader::~Leader() {
 	if (debug) cout << ID << " will not be Leader any more." << endl;

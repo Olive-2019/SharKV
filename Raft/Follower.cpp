@@ -2,8 +2,9 @@
 Follower::Follower(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
 	NetWorkAddress startAddress, NetWorkAddress applyMessageAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor) :
 	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, applyMessageAddress,
-		commitIndex, lastApplied, logEntries, votedFor), leaderID(-1) {
-	timeoutThread = NULL;
+		commitIndex, lastApplied, logEntries, votedFor), leaderID(-1), timeoutThread(NULL) {
+	if (debug) cout << "Follower::Follower new a Follower" << endl;
+
 }
 Follower::~Follower() {
 	timeoutCounter.stopCounter();
@@ -67,12 +68,6 @@ Answer Follower::appendEntries(rpc_conn conn, string appendEntriesCodedIntoStrin
 	AppendEntries appendEntries(appendEntriesCodedIntoString);
 	if (debug) {
 		cout << "Follower::appendEntries : content " << appendEntriesCodedIntoString << endl;
-		/*cout << ID << " receive appendEntries Msg from " << appendEntries.getLeaderId() << endl;
-		cout << "content prevIndex: " << appendEntries.getPrevLogIndex() << " prevTerm" << appendEntries.getPrevLogTerm() << endl;
-		cout << "entries number:" << appendEntries.getEntries().size() << endl;
-		for (LogEntry entry : logEntries) {
-			cout << " command: " << entry.getCommand() << " term:" << entry.getTerm() << endl;
-		}*/
 	}
 	// 超时计时器计数
 	timeoutCounter.setReceiveInfoFlag();
