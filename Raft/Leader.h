@@ -36,7 +36,7 @@ class Leader : public State
 	Answer getOneFollowerReturnValue(int followerID);
 
 	// 给指定ID的follower发送appendEntries，内容为本状态机的[start,end]的内容，若start<0则为空的心跳信息(组装好AppendEntries)
-	void sendAppendEntries(int followerID, int start, int end);
+	void sendAppendEntries(int followerID, int start, int end, bool snapshot = false);
 	// 发指定follower的包，返回值代表还能不能发包（拿一步的AppendEntries重发）
 	bool sendAppendEntries(int followerID);
 
@@ -47,8 +47,11 @@ class Leader : public State
 	// 注册start函数句柄
 	void registerHandleStart();
 
-	// 快照
+	// 快照接口
 	void snapShot();
+	// 阻塞，通知follower写快照
+	// 得自己开一条信道，不能跟原有的
+	void informSnapshot(int snapshotIndex);
 	// 快照对系统状态的改变
 	void snapShotModifyState(int snapshotIndex);
 	

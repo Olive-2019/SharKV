@@ -126,7 +126,7 @@ Answer Leader::getOneFollowerReturnValue(int followerID) {
 			return ans;
 		}
 	throw exception("Leader::getOneFollowerReturnValue Logical Error: didn't hava return value.");
-	return Answer{ 0, false };
+	return Answer( 0, false );
 }
 
 void Leader::updateCommit() {
@@ -140,13 +140,10 @@ void Leader::updateCommit() {
 		else break;
 	}
 	if (commitIndex >= logEntries.size()) commitIndex = logEntries.size() - 1;
-	
-	if (commitIndex < 5) {
-		applyMsg();
-		return;
-	}
-	// 若commit的数量超过阈值，则要开始执行快照操作
-	snapShot();
+	// 若未超过阈值，则正常applyMsg
+	if (commitIndex < 5) applyMsg();
+	// 若commit的数量超过阈值，则要开始执行快照操作，阻塞操作，并不会开新线程
+	else snapShot();
 }
 
 void Leader::applyMsg(bool snapshot, int snapshotIndex) {
@@ -164,7 +161,7 @@ void Leader::applyMsg(bool snapshot, int snapshotIndex) {
 	rpc.invokeRemoteApplyMsg(applyMessageAddress, ApplyMsg(commands, applyIndex, snapshot));
 }
 
-void Leader::sendAppendEntries(int followerID, int start, int end) {
+void Leader::sendAppendEntries(int followerID, int start, int end, bool snapshot) {
 	// 下标合法性判断
 	if (start >= 0 && (end >= logEntries.size() || start > end)) {
 		if (debug) cout << "Leader::sendAppendEntries: start " << start << " end " << end << " logEntries.size() " << logEntries.size() << endl;
@@ -185,7 +182,7 @@ void Leader::sendAppendEntries(int followerID, int start, int end) {
 	}
 		
 	// 待发送
-	lastAppendEntries[followerID] = AppendEntries(currentTerm, ID, prevIndex, prevTerm, commitIndex, entries);
+	lastAppendEntries[followerID] = AppendEntries(currentTerm, ID, prevIndex, prevTerm, commitIndex, entries, snapshot);
 	// 异步调用 发送请求
 	sendAppendEntries(followerID);
 	
@@ -252,17 +249,41 @@ void Leader::registerHandleStart() {
 }
 
 void Leader::snapShot() {
-	// 通知每一个系统存快照，若半数以上通过则存
 	int snapshotIndex = commitIndex;
-	// 通知上层应用写快照到磁盘
+	// 通知每一个系统存快照，若半数以上通过则存
+	informSnapshot(snapshotIndex);
+	// 修改自己的状态，通知上层应用写快照
+	snapShotModifyState(snapshotIndex);
+}
+void Leader::informSnapshot(int snapshotIndex) {
+	map<int, bool> hasReturn;
+	int counter = 0;
+	for (auto follower = followerReturnVal.begin(); follower != followerReturnVal.end(); ++follower) {
+		int followerID = follower->first;
+		// 发送snapshot的AppendEntries
+		sendAppendEntries(followerID, 0, snapshotIndex, true);
+		// 初始化返回值
+		hasReturn[followerID] = false;
+	}
+	// 检测是否过半
+	while (counter < serverAddress.size() / 2) {
+		for (auto follower = followerReturnVal.begin(); follower != followerReturnVal.end(); ++follower) {
+			int followerID = follower->first;
+			if (hasReturn[followerID]) continue;
+			if (checkOneFollowerReturnValue(followerID)) {
+				hasReturn[followerID] = true;
+				counter++;
+			}
+		}
+	}
 	
-	snapShotModifyState();
 }
 
 
 void Leader::snapShotModifyState(int snapshotIndex) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
-	applyMsg(true);
+	// 通知上层应用快照写磁盘
+	applyMsg(true, snapshotIndex);
 	logEntries.erase(logEntries.begin(), logEntries.begin() + snapshotIndex);
 	for (auto follower = nextIndex.begin(); follower != nextIndex.end(); ++follower) {
 		int followerID = follower->first;
