@@ -1,5 +1,6 @@
 #pragma once
 #include "StartAnswer.h"
+#include "ApplyMsg.h"
 using namespace rest_rpc;
 class Raft
 {
@@ -15,6 +16,8 @@ class Raft
 	thread* applyMsgThread;
 	// debug标志位
 	bool debug;
+
+	void snapshot();
 public:
 	Raft(NetWorkAddress raftServerAddress, int applyMsgPort);
 	~Raft();
@@ -22,7 +25,7 @@ public:
 	// 阻塞函数，需要等待返回值
 	StartAnswer start(string command);
 	// 接收Raft系统的applyMsg信息
-	void applyMsg(rpc_conn conn, string command, int index);
+	void applyMsg(rpc_conn conn, ApplyMsg applyMsg);
 	// 注册接收返回commit信息的函数
 	void registerApplyMsg();
 	void setDebug();

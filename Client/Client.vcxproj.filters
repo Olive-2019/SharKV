@@ -32,5 +32,11 @@
     <ClInclude Include="source.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="ApplyMsg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="POJO.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -21,16 +21,23 @@ class AppendEntries : public POJO
 	int leaderCommit;
 	// 需要拷贝的多条log entry，心跳信息会是空
 	vector<LogEntry> entries;
-	//MSGPACK_DEFINE(term, leaderId, prevLogIndex);
+
+	// 快照标志位
+	bool snapshot;
+
 public:
 	AppendEntries() {  }
-	AppendEntries(int term, int leaderId, int prevLogIndex, int prevLogTerm, int leaderCommit, vector<LogEntry> entries);
-	MSGPACK_DEFINE(term, leaderId, prevLogIndex, prevLogTerm, leaderCommit, entries);
+	AppendEntries(int term, int leaderId, int prevLogIndex, int prevLogTerm, int leaderCommit, 
+		vector<LogEntry> entries, bool snapshot = false) :
+		term(term), leaderId(leaderId), prevLogIndex(prevLogIndex), prevLogTerm(prevLogTerm), 
+		entries(entries), leaderCommit(leaderCommit), snapshot(snapshot) {}
+	MSGPACK_DEFINE(term, leaderId, prevLogIndex, prevLogTerm, leaderCommit, entries, snapshot);
 	int getTerm()const { return term; }
 	int getLeaderId()const { return leaderId; }
 	int getPrevLogIndex()const { return prevLogIndex; }
 	int getPrevLogTerm()const { return prevLogTerm; }
 	int getLeaderCommit()const { return leaderCommit; }
 	vector<LogEntry> getEntries()const { return entries; }
+	bool isSnapshot() const { return snapshot; }
 };
 

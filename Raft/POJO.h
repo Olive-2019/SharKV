@@ -1,5 +1,6 @@
 #pragma once
 #include "source.h"
+#include <include/rest_rpc/rpc_client.hpp>
 class POJO
 {
 protected:
@@ -9,6 +10,5 @@ protected:
 	//返回指定长度字符串，index会增加
 	string getSettedLenString(const string& buff, int& index, int size)const;
 public:
-	//virtual string code() const  = 0;
 };
 

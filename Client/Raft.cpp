@@ -11,11 +11,14 @@ Raft::~Raft() {
     applyMsgThread->join();
     delete applyMsgThread;
 }
-void Raft::applyMsg(rpc_conn conn, string command, int index) {
-    //if (commands[index] == command) {
-    if (debug) cout << "Raft::applyMsg content:command " << command << " index " << index;
-    commitedIndex = index;
-    //}
+void Raft::applyMsg(rpc_conn conn, ApplyMsg applyMsg) {
+    if (debug) cout << "Raft::applyMsg content:command " << applyMsg.getCommand() << " index " << applyMsg.getIndex();
+    commitedIndex = applyMsg.getIndex();
+    if (applyMsg.isSnapshot()) {
+        // 调用写磁盘的函数
+        snapshot();
+    }
+
 }
 void Raft::registerApplyMsg() {
     rpc_server server(applyMsgPort, 6);
@@ -53,4 +56,7 @@ void Raft::run() {
         if (debug) cout << "Raft::run " << command << endl;
         StartAnswer ans = start(command);
     }
+}
+void Raft::snapshot() {
+    // 将当前状态写磁盘
 }

@@ -81,6 +81,9 @@
     <ClCompile Include="PersistenceInfoReaderAndWriter.cpp">
       <Filter>源文件\ORM</Filter>
     </ClCompile>
+    <ClCompile Include="ApplyMsg.cpp">
+      <Filter>源文件\POJO</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Raft.h">
@@ -132,6 +135,9 @@
       <Filter>头文件\ORM</Filter>
     </ClInclude>
     <ClInclude Include="StartAnswer.h">
+      <Filter>头文件\POJO</Filter>
+    </ClInclude>
+    <ClInclude Include="ApplyMsg.h">
       <Filter>头文件\POJO</Filter>
     </ClInclude>
   </ItemGroup>

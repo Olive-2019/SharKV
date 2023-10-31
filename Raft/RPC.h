@@ -5,6 +5,7 @@
 #include "AppendEntries.h"
 #include "RequestVote.h"
 #include "../rest_rpc/include/rest_rpc.hpp"
+#include "ApplyMsg.h"
 using namespace rest_rpc::rpc_service;
 using namespace rest_rpc;
 //新增调用RPC的类/
@@ -21,6 +22,6 @@ public:
 
 	StartAnswer invokeRemoteStart(NetWorkAddress address, string arg);
 
-	void invokeRemoteApplyMsg(NetWorkAddress address, string command, int index);
+	void invokeRemoteApplyMsg(NetWorkAddress address, ApplyMsg applyMsg);
 };
 

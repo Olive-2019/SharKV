@@ -136,6 +136,8 @@
     <ClCompile Include="Raft.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ApplyMsg.h" />
+    <ClInclude Include="POJO.h" />
     <ClInclude Include="source.h" />
     <ClInclude Include="StartAnswer.h" />
     <ClInclude Include="Raft.h" />

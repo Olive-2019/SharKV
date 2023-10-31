@@ -1,6 +1,5 @@
 #pragma once
 #include "POJO.h"
-#include <include/rest_rpc/rpc_client.hpp>
 
 class LogEntry : public POJO
 {
