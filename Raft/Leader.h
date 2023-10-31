@@ -10,11 +10,14 @@ class Leader : public State
 	
 	// 用于异步接收心跳/返回值的future
 	map<int, vector<shared_future<Answer>>> followerReturnVal;
+	// 用于异步接收snapshot的future
+	map<int, vector<shared_future<Answer>>> snapshotReturnVal;
 	// 最大重发次数
 	int maxResendNum;
 
 	// 记录上一个包，方便重发
 	map<int, AppendEntries> lastAppendEntries;
+	map<int, AppendEntries> snapshotLastAppendEntries;
 
 	
 
@@ -36,9 +39,9 @@ class Leader : public State
 	Answer getOneFollowerReturnValue(int followerID);
 
 	// 给指定ID的follower发送appendEntries，内容为本状态机的[start,end]的内容，若start<0则为空的心跳信息(组装好AppendEntries)
-	void sendAppendEntries(int followerID, int start, int end, bool snapshot = false);
+	void sendAppendEntries(int followerID, int start, int end, bool snapshot = false, int snapshotIndex = -1);
 	// 发指定follower的包，返回值代表还能不能发包（拿一步的AppendEntries重发）
-	bool sendAppendEntries(int followerID);
+	bool sendAppendEntries(int followerID, bool snapshot = false);
 
 	// 注册等待接收AppendEntries句柄
 	void registerHandleAppendEntries();
@@ -50,7 +53,7 @@ class Leader : public State
 	// 快照接口
 	void snapShot();
 	// 阻塞，通知follower写快照
-	// 得自己开一条信道，不能跟原有的
+	// 得自己开一条信道，不能跟原有的冲突了
 	void informSnapshot(int snapshotIndex);
 	// 快照对系统状态的改变
 	void snapShotModifyState(int snapshotIndex);

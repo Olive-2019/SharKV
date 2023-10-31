@@ -161,7 +161,7 @@ void Leader::applyMsg(bool snapshot, int snapshotIndex) {
 	rpc.invokeRemoteApplyMsg(applyMessageAddress, ApplyMsg(commands, applyIndex, snapshot));
 }
 
-void Leader::sendAppendEntries(int followerID, int start, int end, bool snapshot) {
+void Leader::sendAppendEntries(int followerID, int start, int end, bool snapshot, int snapshotIndex) {
 	// 下标合法性判断
 	if (start >= 0 && (end >= logEntries.size() || start > end)) {
 		if (debug) cout << "Leader::sendAppendEntries: start " << start << " end " << end << " logEntries.size() " << logEntries.size() << endl;
@@ -182,21 +182,35 @@ void Leader::sendAppendEntries(int followerID, int start, int end, bool snapshot
 	}
 		
 	// 待发送
-	lastAppendEntries[followerID] = AppendEntries(currentTerm, ID, prevIndex, prevTerm, commitIndex, entries, snapshot);
+	if (snapshot) snapshotLastAppendEntries[followerID] = AppendEntries(currentTerm, ID, prevIndex, prevTerm, snapshotIndex, entries, snapshot);
+	else lastAppendEntries[followerID] = AppendEntries(currentTerm, ID, prevIndex, prevTerm, commitIndex, entries, snapshot);
 	// 异步调用 发送请求
-	sendAppendEntries(followerID);
+	sendAppendEntries(followerID, snapshot);
 	
 }
-bool Leader::sendAppendEntries(int followerID) {
+bool Leader::sendAppendEntries(int followerID, bool snapshot) {
 	if (serverAddress.find(followerID) == serverAddress.end()) throw exception("Leader::resendAppendEntries follower doesn't exist.");
-	// 如果已经超出最大重发次数，则不重发，直接返回
-	if (followerReturnVal[followerID].size() >= maxResendNum) return false;
-	// 异步调用 发送请求
-	followerReturnVal[followerID].push_back(
-		async(&RPC::invokeAppendEntries, &rpc, serverAddress[followerID], 
-			lastAppendEntries[followerID])
-	);
-	if (debug) cout << "send appendEntries to " << followerID << " content size is " << lastAppendEntries[followerID].getEntries().size() << endl;
+	if (snapshot) {
+		// 如果已经超出最大重发次数，则不重发，直接返回
+		if (snapshotReturnVal[followerID].size() >= maxResendNum) return false;
+		// 异步调用 发送请求
+		snapshotReturnVal[followerID].push_back(
+			async(&RPC::invokeAppendEntries, &rpc, serverAddress[followerID],
+				snapshotLastAppendEntries[followerID])
+		);
+		if (debug) cout << "send snapshot appendEntries to " << followerID << " content size is " << snapshotLastAppendEntries[followerID].getEntries().size() << endl;
+	}
+	else {
+		// 如果已经超出最大重发次数，则不重发，直接返回
+		if (followerReturnVal[followerID].size() >= maxResendNum) return false;
+		// 异步调用 发送请求
+		followerReturnVal[followerID].push_back(
+			async(&RPC::invokeAppendEntries, &rpc, serverAddress[followerID], 
+				lastAppendEntries[followerID])
+		);
+		if (debug) cout << "send appendEntries to " << followerID << " content size is " << lastAppendEntries[followerID].getEntries().size() << endl;
+	}
+	
 	return true;
 }
 
