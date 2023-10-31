@@ -1,9 +1,10 @@
 #include "Leader.h"
 #include "Follower.h"
 Leader::Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
-	NetWorkAddress startAddress, NetWorkAddress applyMessageAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor, int maxResendNum) :
-	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries, votedFor),
-    maxResendNum(maxResendNum){
+	NetWorkAddress startAddress, NetWorkAddress applyMessageAddress, int commitIndex, int lastApplied, 
+	vector<LogEntry> logEntries, int votedFor, int maxResendNum, int snapshotThreshold) :
+	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, applyMessageAddress,
+		commitIndex, lastApplied, logEntries, votedFor), maxResendNum(maxResendNum), snapshotThreshold(snapshotThreshold) {
 	if (debug) cout << "Leader::Leader new a leader" << endl;
 }
 Leader::~Leader() {
@@ -109,12 +110,21 @@ void Leader::checkFollowers() {
 	}
 }
 // 检查单个follower，若成功则true，若不成功则尝试重发
-bool Leader::checkOneFollowerReturnValue(int followerID) {
-	// 遍历follower的返回值
-	for (int i = 0; i < followerReturnVal[followerID].size(); ++i) 
-		if (followerReturnVal[followerID][i]._Is_ready()) return true;
+bool Leader::checkOneFollowerReturnValue(int followerID, bool snapshot) {
+	// 遍历follower的返回值，需要区分是否snapshot的
+	auto val = followerReturnVal[followerID].begin(), end = followerReturnVal[followerID].end();
+	if (snapshot) val = snapshotReturnVal[followerID].begin(), end = snapshotReturnVal[followerID].end();
+	while (val != end) {
+		future_status status = val->wait_for(seconds(0));
+		if (status == future_status::ready) return true;
+		else if (status == future_status::timeout) {
+			if (snapshot) val = snapshotReturnVal[followerID].erase(val);
+			else val = followerReturnVal[followerID].erase(val);
+		} 
+		else val++;
+	}
 	// 都没有返回，则尝试重发
-	sendAppendEntries(followerID);
+	sendAppendEntries(followerID, snapshot);
 	return false;
 }
 // 获取单个follower的返回值
@@ -141,9 +151,9 @@ void Leader::updateCommit() {
 	}
 	if (commitIndex >= logEntries.size()) commitIndex = logEntries.size() - 1;
 	// 若未超过阈值，则正常applyMsg
-	if (commitIndex < 5) applyMsg();
-	// 若commit的数量超过阈值，则要开始执行快照操作，阻塞操作，并不会开新线程
-	else snapShot();
+	if (commitIndex < snapshotThreshold) applyMsg();
+	// 若commit的数量超过阈值，则要开一条线程执行快照操作
+	else async(&Leader::snapshot, this);
 }
 
 void Leader::applyMsg(bool snapshot, int snapshotIndex) {
@@ -190,33 +200,22 @@ void Leader::sendAppendEntries(int followerID, int start, int end, bool snapshot
 }
 bool Leader::sendAppendEntries(int followerID, bool snapshot) {
 	if (serverAddress.find(followerID) == serverAddress.end()) throw exception("Leader::resendAppendEntries follower doesn't exist.");
-	if (snapshot) {
-		// 如果已经超出最大重发次数，则不重发，直接返回
-		if (snapshotReturnVal[followerID].size() >= maxResendNum) return false;
-		// 异步调用 发送请求
-		snapshotReturnVal[followerID].push_back(
-			async(&RPC::invokeAppendEntries, &rpc, serverAddress[followerID],
-				snapshotLastAppendEntries[followerID])
-		);
-		if (debug) cout << "send snapshot appendEntries to " << followerID << " content size is " << snapshotLastAppendEntries[followerID].getEntries().size() << endl;
-	}
-	else {
-		// 如果已经超出最大重发次数，则不重发，直接返回
-		if (followerReturnVal[followerID].size() >= maxResendNum) return false;
-		// 异步调用 发送请求
-		followerReturnVal[followerID].push_back(
-			async(&RPC::invokeAppendEntries, &rpc, serverAddress[followerID], 
-				lastAppendEntries[followerID])
-		);
-		if (debug) cout << "send appendEntries to " << followerID << " content size is " << lastAppendEntries[followerID].getEntries().size() << endl;
-	}
-	
+	int sendNum = followerReturnVal[followerID].size();
+	AppendEntries sendEntries = lastAppendEntries[followerID];
+	if (snapshot) sendNum = snapshotReturnVal[followerID].size(), sendEntries = snapshotLastAppendEntries[followerID];
+	// 如果已经超出最大重发次数，则不重发，直接返回
+	if (sendNum >= maxResendNum) return false;
+	// 异步调用 发送请求
+	shared_future<Answer> ans = async(&RPC::invokeAppendEntries, &rpc, serverAddress[followerID], sendEntries);
+	// 将异步结果放入队列中
+	if (snapshot) snapshotReturnVal[followerID].push_back(ans);
+	else followerReturnVal[followerID].push_back(ans);
+	if (debug) cout << "send appendEntries to " << followerID << " content size is " << sendEntries.getEntries().size() << endl;
 	return true;
 }
 
 //给其他所有进程同步log entries
 void Leader::work() {
-
 
 	if (debug) cout << endl << ID << " work as Leader" << endl;
 
@@ -262,9 +261,9 @@ void Leader::registerHandleStart() {
 	startRpcServer->register_handler("start", &Leader::start, this);
 }
 
-void Leader::snapShot() {
+void Leader::snapshot() {
 	int snapshotIndex = commitIndex;
-	// 通知每一个系统存快照，若半数以上通过则存
+	// 通知每一个系统存快照，若半数以上通过则可以进入下一步
 	informSnapshot(snapshotIndex);
 	// 修改自己的状态，通知上层应用写快照
 	snapShotModifyState(snapshotIndex);
@@ -279,22 +278,22 @@ void Leader::informSnapshot(int snapshotIndex) {
 		// 初始化返回值
 		hasReturn[followerID] = false;
 	}
-	// 检测是否过半
+	// 检测是否过半，没过半就不停重发
 	while (counter < serverAddress.size() / 2) {
 		for (auto follower = followerReturnVal.begin(); follower != followerReturnVal.end(); ++follower) {
 			int followerID = follower->first;
 			if (hasReturn[followerID]) continue;
-			if (checkOneFollowerReturnValue(followerID)) {
+			if (checkOneFollowerReturnValue(followerID, true)) {
 				hasReturn[followerID] = true;
 				counter++;
 			}
 		}
 	}
-	
 }
 
 
 void Leader::snapShotModifyState(int snapshotIndex) {
+	// 需要修改状态，所以不能让其他接受线程改状态
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	// 通知上层应用快照写磁盘
 	applyMsg(true, snapshotIndex);

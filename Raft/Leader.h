@@ -14,6 +14,8 @@ class Leader : public State
 	map<int, vector<shared_future<Answer>>> snapshotReturnVal;
 	// 最大重发次数
 	int maxResendNum;
+	// 快照阈值
+	int snapshotThreshold;
 
 	// 记录上一个包，方便重发
 	map<int, AppendEntries> lastAppendEntries;
@@ -34,7 +36,7 @@ class Leader : public State
 	// 检测所有follower，重发或新发包
 	void checkFollowers();
 	// 检查单个follower，若成功则true，若不成功则尝试重发
-	bool checkOneFollowerReturnValue(int followerID);
+	bool checkOneFollowerReturnValue(int followerID, bool snapshot = false);
 	// 获取单个follower的返回值
 	Answer getOneFollowerReturnValue(int followerID);
 
@@ -51,9 +53,8 @@ class Leader : public State
 	void registerHandleStart();
 
 	// 快照接口
-	void snapShot();
+	void snapshot();
 	// 阻塞，通知follower写快照
-	// 得自己开一条信道，不能跟原有的冲突了
 	void informSnapshot(int snapshotIndex);
 	// 快照对系统状态的改变
 	void snapShotModifyState(int snapshotIndex);
@@ -61,7 +62,7 @@ class Leader : public State
 public:
 	Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
 		NetWorkAddress startAddress, NetWorkAddress applyMessageAddress, int commitIndex, int lastApplied, 
-		vector<LogEntry> logEntries, int votedFor = -1, int maxResendNum = 3);
+		vector<LogEntry> logEntries, int votedFor = -1, int maxResendNum = 3, int snapshotThreshold = 10);
 	// 析构函数完成线程join和delete掉线程对象的任务
 	~Leader();
 	// 接收RequestVote
