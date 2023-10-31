@@ -1,6 +1,7 @@
 #pragma once
 #include "StartAnswer.h"
 #include "ApplyMsg.h"
+#include "source.h"
 using namespace rest_rpc;
 class Raft
 {
@@ -16,24 +17,26 @@ class Raft
 	thread* applyMsgThread;
 	// debug标志位
 	bool debug;
+	// applyMsg锁，保证系统状态不被并行修改（commands、commitedIndex）
+	mutex stateLock;
 
 	// 执行到newCommitIndex
 	void execute(int newCommitIndex);
 	// 写快照
-	void snapshot();
+	void snapshot(int snapshotIndex);
 	// 更新命令，比较新命令和原有命令的区别，若不同则覆写并更新commitedIndex，commitedIndex = min(commitedIndex, the first index is different from new commands)
 	void updateCommands(vector<string> newCommands);
+	// 注册接收返回commit信息的函数
+	void registerApplyMsg();
+	// 开启调试信息
+	void setDebug();
+	// 向Raft系统发送命令,阻塞函数，需要等待返回值
+	StartAnswer start(string command);
 public:
 	Raft(NetWorkAddress raftServerAddress, int applyMsgPort);
 	~Raft();
-	// 向Raft系统发送命令
-	// 阻塞函数，需要等待返回值
-	StartAnswer start(string command);
 	// 接收Raft系统的applyMsg信息
 	void applyMsg(rpc_conn conn, ApplyMsg applyMsg);
-	// 注册接收返回commit信息的函数
-	void registerApplyMsg();
-	void setDebug();
 	void run();
 };
 

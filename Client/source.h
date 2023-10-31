@@ -7,8 +7,15 @@
 #include <future>
 #include <string>
 #include <thread>
-
 #include <include/rest_rpc/rpc_server.h>
+#include "../rest_rpc/include/rest_rpc.hpp"
+using namespace rest_rpc::rpc_service;
+using std::mutex;
+using std::unique_ptr;
+using namespace rest_rpc;
+using std::thread;
+using std::lock_guard;
+using std::future_status;
 using namespace rest_rpc::rpc_service;
 using std::string;
 using std::to_string;
