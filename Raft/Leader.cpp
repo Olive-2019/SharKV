@@ -156,20 +156,7 @@ void Leader::updateCommit() {
 	else async(&Leader::snapshot, this);
 }
 
-void Leader::applyMsg(bool snapshot, int snapshotIndex) {
-	//if (debug) cout << "Leader::applyMsg content logEntries.size() " << logEntries.size() << " commitIndex " << commitIndex << endl;
-	/*
-	* snapshot作为写快照标志，若为写快照，则index为快照下标
-	* 若为普通applyMsg，则为commitedIndex
-	*/
-	int applyIndex = commitIndex;
-	if (snapshot) applyIndex = snapshotIndex;
-	if (applyIndex < 0 || applyIndex >= logEntries.size()) throw exception("Leader::applyMsg logical error: index is negative or greater than the log");
-	vector<string> commands;
-	// 发送index包含的所有命令
-	for (int i = 0; i <= applyIndex; ++i) commands.push_back(logEntries[i].getCommand());
-	rpc.invokeRemoteApplyMsg(applyMessageAddress, ApplyMsg(commands, applyIndex, snapshot));
-}
+
 
 void Leader::sendAppendEntries(int followerID, int start, int end, bool snapshot, int snapshotIndex) {
 	// 下标合法性判断
@@ -263,7 +250,7 @@ void Leader::registerHandleStart() {
 
 void Leader::snapshot() {
 	int snapshotIndex = commitIndex;
-	// 通知每一个系统存快照，若半数以上通过则可以进入下一步
+	// 通知每一个系统存快照，若半数以上通过则可以进入下一步（会阻塞一段时间）
 	informSnapshot(snapshotIndex);
 	// 修改自己的状态，通知上层应用写快照
 	snapShotModifyState(snapshotIndex);
@@ -295,9 +282,7 @@ void Leader::informSnapshot(int snapshotIndex) {
 void Leader::snapShotModifyState(int snapshotIndex) {
 	// 需要修改状态，所以不能让其他接受线程改状态
 	lock_guard<mutex> lockGuard(receiveInfoLock);
-	// 通知上层应用快照写磁盘
-	applyMsg(true, snapshotIndex);
-	logEntries.erase(logEntries.begin(), logEntries.begin() + snapshotIndex);
+	State::snapShotModifyState(snapshotIndex);
 	for (auto follower = nextIndex.begin(); follower != nextIndex.end(); ++follower) {
 		int followerID = follower->first;
 		// 重置next

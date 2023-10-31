@@ -90,7 +90,7 @@ void RPC::invokeRemoteApplyMsg(NetWorkAddress address, ApplyMsg applyMsg) {
         cout << "RPC::invokeRemoteFunc" << endl;
     }*/
     try {
-        client.call<bool>("applyMsg", applyMsg);
+        client.call<void>("applyMsg", applyMsg);
     }
     catch (exception e) {
         cout << e.what() << endl;

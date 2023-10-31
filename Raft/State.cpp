@@ -42,6 +42,32 @@ void State::persistence() const {
 	//persistenceInfoReaderAndWriter.write();
 }
 
+void State::applyMsg(bool snapshot, int snapshotIndex) {
+	//if (debug) cout << "Leader::applyMsg content logEntries.size() " << logEntries.size() << " commitIndex " << commitIndex << endl;
+	/*
+	* snapshot作为写快照标志，若为写快照，则index为快照下标
+	* 若为普通applyMsg，则为commitedIndex
+	*/
+	int applyIndex = commitIndex;
+	if (snapshot) applyIndex = snapshotIndex;
+	if (applyIndex < 0 || applyIndex >= logEntries.size()) throw exception("Leader::applyMsg logical error: index is negative or greater than the log");
+	vector<string> commands;
+	// 发送index包含的所有命令
+	for (int i = 0; i <= applyIndex; ++i) commands.push_back(logEntries[i].getCommand());
+	// 异步通知上层应用写快照/执行命令（非可信交互）
+	async(&RPC::invokeRemoteApplyMsg, &rpc, applyMessageAddress, ApplyMsg(commands, applyIndex, snapshot));
+	//rpc.invokeRemoteApplyMsg(applyMessageAddress, ApplyMsg(commands, applyIndex, snapshot));
+}
+void State::snapShotModifyState(int snapshotIndex) {
+	// 通知上层应用快照写磁盘
+	applyMsg(true, snapshotIndex);
+	// 删除命令
+	logEntries.erase(logEntries.begin(), logEntries.begin() + snapshotIndex);
+	// 修改commit状态
+	commitIndex -= (snapshotIndex + 1);
+}
+
+
 void State::printState() {
 	cout << endl << endl;
 	cout << "There are " << logEntries.size() << " log entries in this state." << endl;

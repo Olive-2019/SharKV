@@ -30,8 +30,12 @@ protected:
 	int votedFor;
 	// 当前server的所有log entries，每一条log entry包含命令和term编号
 	vector<LogEntry> logEntries;
+
+	/*从配置或启动命令中读入*/
 	//状态机id
 	int ID;
+
+	/*其实只需要port，有时间将接口改了*/
 	// 状态机用于接收start的ip和port
 	NetWorkAddress startAddress;
 	// 状态机用于接收appendEntries的ip和port
@@ -104,6 +108,13 @@ protected:
 
 	// 持久化
 	void persistence() const;
+
+
+
+	// 快照对系统状态的改变
+	void snapShotModifyState(int snapshotIndex);
+	// 发送更新的commit信息，异步通知上层应用
+	void applyMsg(bool snapshot = false, int snapshotIndex = -1);
 public:
 	// 构造函数完成初始化两个接收线程和计时器线程的任务
 	State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,NetWorkAddress requestVoteAddress, 

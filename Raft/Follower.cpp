@@ -91,13 +91,9 @@ Answer Follower::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 		index++;
 	}
 	commitIndex = appendEntries.getLeaderCommit();
-	////当leaderCommit > commitIndex时，更新commitIndex = min(leaderCommit, 目前最新entry的index)
-	//if (appendEntries.getLeaderCommit() > commitIndex) {
-	//	commitIndex = appendEntries.getLeaderCommit();
-	//	if (commitIndex > logEntries.size() - 1) commitIndex = logEntries.size() - 1;
-	//}
+	// 若有写快照标志，则修改当前系统状态并通知上层应用写快照
+	if (appendEntries.isSnapshot()) snapShotModifyState(commitIndex);
 	if (debug) cout << "Follower::appendEntries real " << appendEntries.getEntries()[0].getCommand() << endl;
-
 	return Answer( currentTerm, true );
 }
 void Follower::work() {

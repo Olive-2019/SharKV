@@ -29,8 +29,6 @@ class Leader : public State
 	void work();
 	// 更新commitIndex
 	void updateCommit();
-	// 发送更新的commit信息
-	void applyMsg(bool snapshot = false, int snapshotIndex = -1);
 
 
 	// 检测所有follower，重发或新发包
