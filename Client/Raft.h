@@ -17,7 +17,12 @@ class Raft
 	// debug标志位
 	bool debug;
 
+	// 执行到newCommitIndex
+	void execute(int newCommitIndex);
+	// 写快照
 	void snapshot();
+	// 更新命令，比较新命令和原有命令的区别，若不同则覆写并更新commitedIndex，commitedIndex = min(commitedIndex, the first index is different from new commands)
+	void updateCommands(vector<string> newCommands);
 public:
 	Raft(NetWorkAddress raftServerAddress, int applyMsgPort);
 	~Raft();

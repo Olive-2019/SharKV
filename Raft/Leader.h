@@ -25,7 +25,7 @@ class Leader : public State
 	// 更新commitIndex
 	void updateCommit();
 	// 发送更新的commit信息
-	void applyMsg();
+	void applyMsg(bool snapshot = false, int snapshotIndex = -1);
 
 
 	// 检测所有follower，重发或新发包
@@ -50,7 +50,7 @@ class Leader : public State
 	// 快照
 	void snapShot();
 	// 快照对系统状态的改变
-	void snapShotModifyState();
+	void snapShotModifyState(int snapshotIndex);
 	
 public:
 	Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,

@@ -140,12 +140,28 @@ void Leader::updateCommit() {
 		else break;
 	}
 	if (commitIndex >= logEntries.size()) commitIndex = logEntries.size() - 1;
-	applyMsg();
+	
+	if (commitIndex < 5) {
+		applyMsg();
+		return;
+	}
+	// 若commit的数量超过阈值，则要开始执行快照操作
+	snapShot();
 }
-void Leader::applyMsg() {
+
+void Leader::applyMsg(bool snapshot, int snapshotIndex) {
 	//if (debug) cout << "Leader::applyMsg content logEntries.size() " << logEntries.size() << " commitIndex " << commitIndex << endl;
-	if (commitIndex < 0 || commitIndex >= logEntries.size()) return;
-	rpc.invokeRemoteApplyMsg(applyMessageAddress, logEntries[commitIndex].getCommand(), commitIndex);
+	/*
+	* snapshot作为写快照标志，若为写快照，则index为快照下标
+	* 若为普通applyMsg，则为commitedIndex
+	*/
+	int applyIndex = commitIndex;
+	if (snapshot) applyIndex = snapshotIndex;
+	if (applyIndex < 0 || applyIndex >= logEntries.size()) throw exception("Leader::applyMsg logical error: index is negative or greater than the log");
+	vector<string> commands;
+	// 发送index包含的所有命令
+	for (int i = 0; i <= applyIndex; ++i) commands.push_back(logEntries[i].getCommand());
+	rpc.invokeRemoteApplyMsg(applyMessageAddress, ApplyMsg(commands, applyIndex, snapshot));
 }
 
 void Leader::sendAppendEntries(int followerID, int start, int end) {
@@ -237,20 +253,23 @@ void Leader::registerHandleStart() {
 
 void Leader::snapShot() {
 	// 通知每一个系统存快照，若半数以上通过则存
-
+	int snapshotIndex = commitIndex;
+	// 通知上层应用写快照到磁盘
+	
 	snapShotModifyState();
 }
 
 
-void Leader::snapShotModifyState() {
+void Leader::snapShotModifyState(int snapshotIndex) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
-	logEntries.clear();
+	applyMsg(true);
+	logEntries.erase(logEntries.begin(), logEntries.begin() + snapshotIndex);
 	for (auto follower = nextIndex.begin(); follower != nextIndex.end(); ++follower) {
 		int followerID = follower->first;
-		// 重置next为当前log的最后一个，即-1
-		nextIndex[followerID] = - 1;
-		// 重置matchAddress为-1
-		matchIndex[followerID] = -1;
+		// 重置next
+		nextIndex[followerID] -= snapshotIndex;
+		// 重置matchAddress
+		matchIndex[followerID] -= snapshotIndex;
 		// TODO:通知每一个follower要存快照了
 	}
 }
