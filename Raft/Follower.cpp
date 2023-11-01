@@ -67,7 +67,11 @@ Answer Follower::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	//AppendEntries appendEntries(appendEntriesCodedIntoString);
 	//if (debug) cout << "Follower::appendEntries : content " << appendEntriesCodedIntoString << endl;
-	if (debug) cout << "Follower::appendEntries from " << appendEntries.getLeaderId() <<  " : log entries size: " << appendEntries.getEntries().size();
+	if (debug) cout << "Follower::appendEntries from " << appendEntries.getLeaderId()
+		<<  " : log entries size: " << appendEntries.getEntries().size()
+		<< " prevIndex " << appendEntries.getPrevLogIndex() << " prevTerm " << appendEntries.getPrevLogTerm() << endl;
+	if (debug && appendEntries.getPrevLogIndex() >= 0 && appendEntries.getPrevLogIndex() < logEntries.size())
+		cout << "real pervTerm " << logEntries[appendEntries.getPrevLogIndex()].getTerm() << endl;
 	// 超时计时器计数
 	timeoutCounter.setReceiveInfoFlag();
 	//直接返回false：term < currentTerm 
@@ -79,7 +83,7 @@ Answer Follower::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 		|| logEntries[appendEntries.getPrevLogIndex()].getTerm() != appendEntries.getTerm()))
 		return Answer(currentTerm, false);
 	currentTerm = appendEntries.getTerm();
-		
+	if (debug) cout << "Follower::appendEntries here" << endl;
 	int index = appendEntries.getPrevLogIndex() + 1;
 	// 更新leaderID
 	leaderID = appendEntries.getLeaderId();
@@ -93,7 +97,7 @@ Answer Follower::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 	commitIndex = appendEntries.getLeaderCommit();
 	// 若有写快照标志，则修改当前系统状态并通知上层应用写快照，若无，则通知上层应用当前提交的命令
 	if (appendEntries.isSnapshot()) snapShotModifyState(commitIndex);
-	else applyMsg();
+	else if (commitIndex >= 0) applyMsg();
 	if (debug) cout << "Follower::appendEntries real " << appendEntries.getEntries()[0].getCommand() << endl;
 	return Answer( currentTerm, true );
 }

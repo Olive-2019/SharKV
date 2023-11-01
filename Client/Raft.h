@@ -39,4 +39,3 @@ public:
 	void applyMsg(rpc_conn conn, ApplyMsg applyMsg);
 	void run();
 };
-
