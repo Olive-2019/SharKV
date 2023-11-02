@@ -30,7 +30,7 @@ class Leader : public State
 	// 更新commitIndex
 	void updateCommit();
 
-
+	/*主线程的任务，快照复用了这部分函数*/
 	// 检测所有follower，重发或新发包
 	void checkFollowers();
 	// 检查单个follower，若成功则true，若不成功则尝试重发
@@ -43,6 +43,14 @@ class Leader : public State
 	// 发指定follower的包，返回值代表还能不能发包（拿一步的AppendEntries重发）
 	bool sendAppendEntries(int followerID, bool snapshot = false);
 
+	// 快照接口
+	void snapshot();
+	// 阻塞，通知follower写快照
+	void informSnapshot(int snapshotIndex);
+	// 快照对系统状态的改变
+	void snapShotModifyState(int snapshotIndex);
+
+	/*虚函数注册不同的句柄*/
 	// 注册等待接收AppendEntries句柄
 	void registerHandleAppendEntries();
 	// 注册投票线程RequestVote句柄
@@ -50,12 +58,6 @@ class Leader : public State
 	// 注册start函数句柄
 	void registerHandleStart();
 
-	// 快照接口
-	void snapshot();
-	// 阻塞，通知follower写快照
-	void informSnapshot(int snapshotIndex);
-	// 快照对系统状态的改变
-	void snapShotModifyState(int snapshotIndex);
 	
 public:
 	Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
