@@ -3,7 +3,7 @@ TimeoutCounter::TimeoutCounter() {
 	receiveInfoFlag = false;
 	stop = false;
 	electionTimeouts = getRandom(4, 5);
-	//electionTimeouts = getRandom(10, 50);
+	//electionTimeouts = getRandom(30, 70);
 }
 int TimeoutCounter::getRandom(int start, int end) {
 	std::default_random_engine randomEngine;

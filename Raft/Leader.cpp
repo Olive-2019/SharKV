@@ -96,14 +96,15 @@ void Leader::checkFollowers() {
 			}
 			else {
 				// next没到头，将后续的都发过去
-				if (logEntries.size()) sendAppendEntries(followerID, nextIndex[followerID], logEntries.size() - 1);
-				else sendAppendEntries(followerID, -1, -1);
+				if (nextIndex[followerID] < 0) nextIndex[followerID] = logEntriesNum - 1;
+				sendAppendEntries(followerID, nextIndex[followerID], logEntriesNum - 1);
 			}
 			
 		}
 		// 返回值为false：next--，重发一次
 		else {
 			// needn't check the heartbreakt, cause if the heartbreak fail, it will be stop at the first one
+			if (nextIndex[followerID] < 0) continue;
 			nextIndex[followerID]--;
 			sendAppendEntries(followerID, nextIndex[followerID], logEntries.size() - 1);
 		}
@@ -112,15 +113,17 @@ void Leader::checkFollowers() {
 // 检查单个follower，若成功则true，若不成功则尝试重发
 bool Leader::checkOneFollowerReturnValue(int followerID, bool snapshot) {
 	// 遍历follower的返回值，需要区分是否snapshot的
-	auto val = followerReturnVal[followerID].begin(), end = followerReturnVal[followerID].end();
-	if (snapshot) val = snapshotReturnVal[followerID].begin(), end = snapshotReturnVal[followerID].end();
-	while (val != end) {
+	vector<shared_future<Answer>>& checkReturnVal = snapshot ? snapshotReturnVal[followerID] : followerReturnVal[followerID];
+	for (auto val = checkReturnVal.begin(); val != checkReturnVal.end(); ) {
+		// 获取调用状态
 		future_status status = val->wait_for(seconds(0));
+		// 只要有一个已经成功返回就会返回true
 		if (status == future_status::ready) return true;
 		else if (status == future_status::timeout) {
+			// 超时删除
 			if (snapshot) val = snapshotReturnVal[followerID].erase(val);
 			else val = followerReturnVal[followerID].erase(val);
-		} 
+		}
 		else val++;
 	}
 	// 都没有返回，则尝试重发
@@ -151,9 +154,9 @@ void Leader::updateCommit() {
 	}
 	if (commitIndex >= logEntries.size()) commitIndex = logEntries.size() - 1;
 	// 若未超过阈值，则正常applyMsg
-	if (commitIndex < snapshotThreshold) applyMsg();
+	if (commitIndex >= 0 && commitIndex < snapshotThreshold) applyMsg();
 	// 若commit的数量超过阈值，则要开一条线程执行快照操作
-	else async(&Leader::snapshot, this);
+	else if (commitIndex >= snapshotThreshold) async(&Leader::snapshot, this);
 }
 
 
@@ -193,11 +196,12 @@ bool Leader::sendAppendEntries(int followerID, bool snapshot) {
 	// 如果已经超出最大重发次数，则不重发，直接返回
 	if (sendNum >= maxResendNum) return false;
 	// 异步调用 发送请求
+	if (debug) cout << "Leader::sendAppendEntries send appendEntries to " << followerID << " content size is " << sendEntries.getEntries().size() << endl;
 	shared_future<Answer> ans = async(&RPC::invokeAppendEntries, &rpc, serverAddress[followerID], sendEntries);
 	// 将异步结果放入队列中
 	if (snapshot) snapshotReturnVal[followerID].push_back(ans);
 	else followerReturnVal[followerID].push_back(ans);
-	if (debug) cout << "send appendEntries to " << followerID << " content size is " << sendEntries.getEntries().size() << endl;
+	//if (debug) cout << "Leader::sendAppendEntries send appendEntries to " << followerID << " content size is " << sendEntries.getEntries().size() << endl;
 	return true;
 }
 

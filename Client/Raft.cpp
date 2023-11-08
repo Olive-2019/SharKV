@@ -68,9 +68,8 @@ void Raft::execute(int newCommitIndex) {
 }
 
 void Raft::snapshot(int snapshotIndex) {
-
     // TODO:将当前状态写磁盘
-    if (debug) cout << "Raft::snapshot write" << endl;
+    if (debug) cout << "Raft::snapshot write disk" << endl;
     // 修改状态，要加一把大锁
     lock_guard<mutex> lockGuard(stateLock);
     commands.erase(commands.begin(), commands.begin() + snapshotIndex);
