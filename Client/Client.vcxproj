@@ -132,12 +132,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Command.cpp" />
+    <ClCompile Include="FileOperator.cpp" />
+    <ClCompile Include="KVserver.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Raft.cpp" />
+    <ClCompile Include="SnapshotPersistence.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ApplyMsg.h" />
+    <ClInclude Include="Command.h" />
+    <ClInclude Include="FileOperator.h" />
+    <ClInclude Include="KVserver.h" />
     <ClInclude Include="POJO.h" />
+    <ClInclude Include="SnapshotPersistence.h" />
     <ClInclude Include="source.h" />
     <ClInclude Include="StartAnswer.h" />
     <ClInclude Include="Raft.h" />

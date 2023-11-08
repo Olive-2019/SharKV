@@ -13,30 +13,72 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="头文件\ORM">
+      <UniqueIdentifier>{4960796a-209e-41fa-b6cb-8f24b605702d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\Raft">
+      <UniqueIdentifier>{d7f1460b-685d-4f43-b1fe-b29402dcdad5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\Raft">
+      <UniqueIdentifier>{86f3ed95-3eed-441a-a47a-db573a9551b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\ORM">
+      <UniqueIdentifier>{cc565d2c-df56-4d12-9ce5-766a7bae768c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\KV">
+      <UniqueIdentifier>{5b2ba5dc-dac8-4c26-8032-f3a147b1e515}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\KV">
+      <UniqueIdentifier>{b62805ca-815b-4813-9fc7-b4f91c40e1da}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Raft.cpp">
-      <Filter>源文件</Filter>
+      <Filter>源文件\Raft</Filter>
+    </ClCompile>
+    <ClCompile Include="SnapshotPersistence.cpp">
+      <Filter>源文件\ORM</Filter>
+    </ClCompile>
+    <ClCompile Include="FileOperator.cpp">
+      <Filter>源文件\ORM</Filter>
+    </ClCompile>
+    <ClCompile Include="KVserver.cpp">
+      <Filter>源文件\KV</Filter>
+    </ClCompile>
+    <ClCompile Include="Command.cpp">
+      <Filter>源文件\KV</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Raft.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="StartAnswer.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="source.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ApplyMsg.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="FileOperator.h">
+      <Filter>头文件\ORM</Filter>
+    </ClInclude>
+    <ClInclude Include="SnapshotPersistence.h">
+      <Filter>头文件\ORM</Filter>
     </ClInclude>
     <ClInclude Include="POJO.h">
-      <Filter>头文件</Filter>
+      <Filter>头文件\Raft</Filter>
+    </ClInclude>
+    <ClInclude Include="ApplyMsg.h">
+      <Filter>头文件\Raft</Filter>
+    </ClInclude>
+    <ClInclude Include="Raft.h">
+      <Filter>头文件\Raft</Filter>
+    </ClInclude>
+    <ClInclude Include="StartAnswer.h">
+      <Filter>头文件\Raft</Filter>
+    </ClInclude>
+    <ClInclude Include="Command.h">
+      <Filter>头文件\KV</Filter>
+    </ClInclude>
+    <ClInclude Include="KVserver.h">
+      <Filter>头文件\KV</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
