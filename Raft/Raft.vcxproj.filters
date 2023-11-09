@@ -84,6 +84,9 @@
     <ClCompile Include="ApplyMsg.cpp">
       <Filter>源文件\POJO</Filter>
     </ClCompile>
+    <ClCompile Include="Command.cpp">
+      <Filter>源文件\POJO</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Raft.h">
@@ -138,6 +141,9 @@
       <Filter>头文件\POJO</Filter>
     </ClInclude>
     <ClInclude Include="ApplyMsg.h">
+      <Filter>头文件\POJO</Filter>
+    </ClInclude>
+    <ClInclude Include="Command.h">
       <Filter>头文件\POJO</Filter>
     </ClInclude>
   </ItemGroup>

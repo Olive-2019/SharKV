@@ -1,5 +1,5 @@
 #include "LogEntry.h"
-LogEntry::LogEntry(int term, string command) : term(term), command(command){}
+LogEntry::LogEntry(int term, Command command) : term(term), command(command){}
 LogEntry::LogEntry(string codedString) {
 	term = 0;
 	int index = 0;
@@ -14,7 +14,7 @@ string LogEntry::code() const {
 	return buff;
 }
 
-string LogEntry::getCommand() const {
+Command LogEntry::getCommand() const {
 	return command;
 }
 int LogEntry::getTerm() const {

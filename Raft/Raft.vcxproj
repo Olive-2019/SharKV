@@ -136,6 +136,7 @@
     <ClCompile Include="AppendEntries.cpp" />
     <ClCompile Include="ApplyMsg.cpp" />
     <ClCompile Include="Candidate.cpp" />
+    <ClCompile Include="Command.cpp" />
     <ClCompile Include="FileOperator.cpp" />
     <ClCompile Include="Follower.cpp" />
     <ClCompile Include="Leader.cpp" />
@@ -155,6 +156,7 @@
     <ClInclude Include="AppendEntries.h" />
     <ClInclude Include="ApplyMsg.h" />
     <ClInclude Include="Candidate.h" />
+    <ClInclude Include="Command.h" />
     <ClInclude Include="FileOperator.h" />
     <ClInclude Include="Follower.h" />
     <ClInclude Include="Leader.h" />

@@ -1,5 +1,7 @@
 #pragma once
 #include "source.h"
+#include <mutex>
+using std::mutex;
 enum CommandType
 {
 	Append, Put, Get
@@ -15,8 +17,8 @@ class Command
 	// 命令的ID：非唯一标识符，
 	int ID;
 public:
-	Command() {}
 	MSGPACK_DEFINE(commandType, key, value);
+	Command(){}
 	Command(CommandType commandType, string key, string value = "");
 	bool operator==(Command other)const;
 	int getID() const { return ID; }
