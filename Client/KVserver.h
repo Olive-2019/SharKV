@@ -3,6 +3,7 @@
 #include "Command.h"
 #include "SnapshotPersistence.h"
 #include "Raft.h"
+class Raft;
 class KVserver
 {
 	map<string, string> data;
@@ -18,5 +19,7 @@ public:
 	void snapshot();
 	// 接收命令，丢给Raft系统
 	void acceptCommand(const Command& command);
+	// 查询cache中的数据，如果查到了，即从cache中删除，返回值代表是否查到
+	bool getData(int commandID, string& value);
 };
 

@@ -132,6 +132,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Clerk.cpp" />
     <ClCompile Include="Command.cpp" />
     <ClCompile Include="FileOperator.cpp" />
     <ClCompile Include="KVserver.cpp" />
@@ -141,6 +142,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ApplyMsg.h" />
+    <ClInclude Include="Clerk.h" />
     <ClInclude Include="Command.h" />
     <ClInclude Include="FileOperator.h" />
     <ClInclude Include="KVserver.h" />

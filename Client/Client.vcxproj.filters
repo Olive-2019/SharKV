@@ -51,6 +51,9 @@
     <ClCompile Include="Command.cpp">
       <Filter>源文件\KV</Filter>
     </ClCompile>
+    <ClCompile Include="Clerk.cpp">
+      <Filter>源文件\KV</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source.h">
@@ -78,6 +81,9 @@
       <Filter>头文件\KV</Filter>
     </ClInclude>
     <ClInclude Include="KVserver.h">
+      <Filter>头文件\KV</Filter>
+    </ClInclude>
+    <ClInclude Include="Clerk.h">
       <Filter>头文件\KV</Filter>
     </ClInclude>
   </ItemGroup>

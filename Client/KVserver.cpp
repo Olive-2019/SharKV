@@ -35,3 +35,9 @@ void KVserver::snapshot() {
 void KVserver::acceptCommand(const Command& command) {
 	raft->start(command);
 }
+bool KVserver::getData(int commandID, string& value) {
+	if (readCache.find(commandID) == readCache.end()) return false;
+	value = readCache[commandID];
+	readCache.erase(commandID);
+	return true;
+}

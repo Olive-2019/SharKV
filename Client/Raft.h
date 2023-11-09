@@ -5,6 +5,7 @@
 #include "Command.h"
 #include "KVserver.h"
 using namespace rest_rpc;
+class KVserver;
 class Raft
 {
 	// 连接raft集群的地址
@@ -22,6 +23,9 @@ class Raft
 	// applyMsg锁，保证系统状态不被并行修改（commands、commitedIndex）
 	mutex stateLock;
 
+	// KV数据库指针
+	KVserver* kvServer;
+
 	// 执行到newCommitIndex
 	void execute(int newCommitIndex);
 	// 写快照
@@ -33,8 +37,7 @@ class Raft
 	// 开启调试信息
 	void setDebug();
 
-	// KV数据库指针
-	KVserver* kvServer;
+	
 public:
 	Raft(NetWorkAddress raftServerAddress, int applyMsgPort, KVserver* kvServer);
 	~Raft();
