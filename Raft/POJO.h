@@ -9,6 +9,8 @@ protected:
 	int getFirstNumber(const string& buff, int& index) const;
 	//返回指定长度字符串，index会增加
 	string getSettedLenString(const string& buff, int& index, int size)const;
+	// 返回从指定位置开始到下一个空格的字符串
+	string getNextString(const string& buff, int& index) const;
 public:
 };
 

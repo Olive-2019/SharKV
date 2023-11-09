@@ -122,7 +122,7 @@ public:
 	int getCurrentTerm() const;
 
 	// start调用，leader和candidate添加一条新的entries，follower转发给leader
-	virtual StartAnswer start(rpc_conn conn, string command);
+	virtual StartAnswer start(rpc_conn conn, Command command);
 
 	// 等待接收AppendEntries
 	virtual Answer appendEntries(rpc_conn conn, AppendEntries appendEntries) = 0;

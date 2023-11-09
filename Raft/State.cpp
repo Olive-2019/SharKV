@@ -52,7 +52,7 @@ void State::applyMsg(bool snapshot, int snapshotIndex) {
 	if (debug) cout << "State::applyMsg applyIndex: " << applyIndex << " snapshot " << snapshot << endl;
 	if (snapshot) applyIndex = snapshotIndex;
 	if (applyIndex < 0 || applyIndex >= logEntries.size()) throw exception("State::applyMsg logical error: index is negative or greater than the log");
-	vector<string> commands;
+	vector<Command> commands;
 	// 发送index包含的所有命令
 	for (int i = 0; i <= applyIndex; ++i) commands.push_back(logEntries[i].getCommand());
 	// 异步通知上层应用写快照/执行命令（非可信交互）
@@ -73,7 +73,7 @@ void State::printState() {
 	cout << endl << endl;
 	cout << "There are " << logEntries.size() << " log entries in this state." << endl;
 	for (LogEntry entry : logEntries) {
-		cout << "term: " << entry.getTerm() << " command: " << entry.getCommand() << endl;
+		cout << "term: " << entry.getTerm() << " command: " << entry.getCommand().getType() << endl;
 	}
 	cout << endl << endl;
 }
@@ -136,9 +136,9 @@ bool State::appendEntriesReal(int prevLogIndex, int prevLogTerm, int leaderCommi
 	return true;
 }
 
-StartAnswer State::start(rpc_conn conn, string command) {
+StartAnswer State::start(rpc_conn conn, Command command) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
-	if (debug) cout << ID << " receive the command from client, content: " << command << endl;
+	if (debug) cout << ID << " receive the command from client, content: " << command.getKey() << endl;
 	//将client给的数据加入当前列表中
 	logEntries.push_back(LogEntry(currentTerm, command));
 	// 有新增加的entries，更新lastApplied

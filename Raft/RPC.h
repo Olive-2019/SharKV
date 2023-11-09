@@ -20,7 +20,7 @@ public:
 	//Answer invokeRemoteFunc(NetWorkAddress address, string funcName, string arg);
 
 
-	StartAnswer invokeRemoteStart(NetWorkAddress address, string arg);
+	StartAnswer invokeRemoteStart(NetWorkAddress address, Command arg);
 
 	void invokeRemoteApplyMsg(NetWorkAddress address, ApplyMsg applyMsg);
 };

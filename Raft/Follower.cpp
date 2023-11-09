@@ -28,7 +28,7 @@ bool Follower::isNewerThanMe(int lastLogIndex, int lastLogTerm) const {
 	if (logEntries.back().getTerm() == currentTerm) return logEntries.size() < lastLogIndex + 1;
 	return currentTerm < logEntries.back().getTerm();
 }
-StartAnswer Follower::start(rpc_conn conn, string command) {
+StartAnswer Follower::start(rpc_conn conn, Command command) {
 	// 不能在这加锁，否则其他线程都要等着转发start的返回值
 	//lock_guard<mutex> lockGuard(receiveInfoLock);
 	// 假如有leader，转发给leader，没有就给自己加
@@ -98,7 +98,7 @@ Answer Follower::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 	// 若有写快照标志，则修改当前系统状态并通知上层应用写快照，若无，则通知上层应用当前提交的命令
 	if (appendEntries.isSnapshot()) snapShotModifyState(commitIndex);
 	else if (commitIndex >= 0) applyMsg();
-	if (debug) cout << "Follower::appendEntries real " << appendEntries.getEntries()[0].getCommand(). << endl;
+	if (debug) cout << "Follower::appendEntries real " << appendEntries.getEntries()[0].getCommand().getKey() << endl;
 	return Answer( currentTerm, true );
 }
 void Follower::work() {

@@ -16,7 +16,7 @@ class Command
 	int ID;
 public:
 	Command() {}
-	MSGPACK_DEFINE(commandType, key, value);
+	MSGPACK_DEFINE(commandType, key, value, ID);
 	Command(CommandType commandType, string key, string value = "");
 	bool operator==(Command other)const;
 	int getID() const { return ID; }

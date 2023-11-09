@@ -15,3 +15,10 @@ string POJO::getSettedLenString(const string& buff, int& index, int size) const 
 	index += size;
 	return newString;
 }
+
+// 返回从指定位置开始到下一个空格的字符串
+string POJO::getNextString(const string& buff, int& index) const {
+	int len = 0;
+	while (index + len < buff.size() && buff[index + len] != ' ') len++;
+	return getSettedLenString(buff, index, len);
+}
