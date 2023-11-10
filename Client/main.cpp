@@ -1,16 +1,19 @@
-#include "Raft.h"
-#include "FileOperator.h"
-#include "KVserver.h"
-int main() {
-	/*NetWorkAddress raftServerAddress("127.0.0.1", 8291);
-	Raft raft(raftServerAddress, 8001);
-	raft.run();*/
-	FileOperator fo("fo.data");
-	map<string, string> data;/*
-	data["Lam"] = "55190906";
-	data["somebody"] = "55190922";*/
-	//fo.write(data);
-	map<string, string> d = fo.read();
-	cout << endl;
+#include "Clerk.h"
+int main(int argc, char* argv[]) {
+	NetWorkAddress raftServerAddress("127.0.0.1", 8291);
+	int applyMsgPort = 8001;
+	if (argc > 1) {
+		cout << argc << endl;
+		// 读入命令行参数
+		applyMsgPort = atoi(argv[1]);
+		raftServerAddress = NetWorkAddress(string(argv[2]), atoi(argv[3]));
+	}
+	string snapshotFilePath = "snapshot" + to_string(applyMsgPort) + ".data";
+	Clerk clerk(raftServerAddress, applyMsgPort, snapshotFilePath);
 
+	clerk.put("Lam", "55190906");
+	clerk.put("somebody", "55190922");
+	clerk.append("Lam", "123");
+	cout << clerk.get("Lam") << endl;
+	return 0;
 }

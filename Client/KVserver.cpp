@@ -5,8 +5,17 @@ KVserver::KVserver(NetWorkAddress raftServerAddress, int applyMsgPort, string sn
 	//NetWorkAddress raftServerAddress("127.0.0.1", 8291);
 	//Raft raft;
 	raft = new Raft(raftServerAddress, applyMsgPort, this);
-	data = snapshotPersistence.read();
+	try {
+		data = snapshotPersistence.read();
+	}
+	catch (exception e) {
+		cout << "welcome to KV Server with Raft" << endl;
+	}
 }
+KVserver::~KVserver() {
+	delete raft;
+}
+
 // 真正执行命令，由Raft调用
 void KVserver::execute(const Command& command) {
 	switch (command.getType()) {

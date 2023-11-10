@@ -13,6 +13,7 @@ class KVserver
 	map<int, string> readCache;
 public:
 	KVserver(NetWorkAddress raftServerAddress, int applyMsgPort = 8001, string snapshotFilePath = "snapshot.data");
+	~KVserver();
 	// 真正执行命令，由Raft调用
 	void execute(const Command& command);
 	// 写快照

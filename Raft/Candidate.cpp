@@ -21,16 +21,21 @@ Answer Candidate::requestVote(rpc_conn conn, RequestVote requestVote) {
 	//RequestVote requestVote(requestVoteCodedIntoString);
 	if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << endl;
 	// term没有比当前Candidate大，可以直接拒绝，并返回当前的term
-	if (requestVote.getTerm() <= currentTerm) return Answer( currentTerm, false );
+	if (requestVote.getTerm() <= currentTerm) {
+		if (debug) cout << "reject " << requestVote.getCandidateId() << ", cause its term is old." << endl;
+		return Answer(currentTerm, false);
+	}
 	// term更新，则退出当前状态，返回到Follower的状态
 	currentTerm = requestVote.getTerm();
 
 	// 理应在返回结果以后结束掉接收线程，但是此处无法这么处理
 	// 所以用nextState作为信号量，保证线程间同步释放
-	if (nextState && nextState->getCurrentTerm() < currentTerm) delete nextState;
-	// 生成下一状态机
-	nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
-		startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
+	if (!nextState || nextState->getCurrentTerm() <= currentTerm) {
+		delete nextState;
+		// 生成下一状态机
+		nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
+			startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
+	}
 	return Answer( currentTerm, true );
 }
 

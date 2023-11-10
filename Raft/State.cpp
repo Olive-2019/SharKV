@@ -138,7 +138,7 @@ bool State::appendEntriesReal(int prevLogIndex, int prevLogTerm, int leaderCommi
 
 StartAnswer State::start(rpc_conn conn, Command command) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
-	if (debug) cout << ID << " receive the command from client, content: " << command.getKey() << endl;
+	if (debug) cout << ID << " receive the command from client, content: " << command.getKey() << " " << command.getValue() << endl;
 	//将client给的数据加入当前列表中
 	logEntries.push_back(LogEntry(currentTerm, command));
 	// 有新增加的entries，更新lastApplied

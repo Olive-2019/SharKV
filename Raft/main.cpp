@@ -15,12 +15,11 @@ int main(int argc, char* argv[]) {
 		cout << argc << endl;
 		serverID = atoi(argv[1]);
 		// 读入命令行参数
-		for (int i = 0; i < 3; ++i) {
+		for (int i = 0; i < 4; ++i) {
 			//cout << 2 + i * 2 << ' ' << 2 + i * 2 + 1 << endl;
 			//cout << argv[2 + i * 2] << " " << argv[2 + i * 2 + 1] << endl;
 			addresses.push_back(getNetWorkAddress(argv[2 + i * 2], argv[2 + i * 2 + 1]));
 		}
-		addresses.push_back(getNetWorkAddress("127.0.0.1", "8001"));
 	}
 	else {
 		// 调试用传参
