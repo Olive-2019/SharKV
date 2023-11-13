@@ -24,6 +24,6 @@ int main(int argc, char* argv[]) {
 	clerk.append("Lam", "123");
 	clerk.append("Lam", "123");
 	clerk.append("Lam", "123");
-	cout << clerk.get("Lam") << endl;
+	//cout << clerk.get("Lam") << endl;
 	return 0;
 }

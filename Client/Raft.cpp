@@ -91,5 +91,6 @@ void Raft::updateCommands(vector<Command> commands) {
         if (i + firstIndex >= this->commands.size()) this->commands.push_back(commands[i]);
         else this->commands[i + firstIndex] = commands[i];
     }
+    
     //commitedIndex = commands.size() - 1;
 }

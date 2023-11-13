@@ -107,14 +107,14 @@ void Leader::checkFollowers() {
 			}
 			int logEntriesNum = logEntries.size();
 			// next到头了，需要发送心跳信息(这个地方的问题，执行逻辑貌似有问题，初步猜测是没有加锁导致的)
-			if (nextIndex[followerID] >= logEntriesNum) {
+			if (nextIndex[followerID] >= logEntriesNum || !logEntriesNum) {
 				if (debug) cout << "Leader::checkFollowers nextIndex " << nextIndex[followerID] << " logEntries.size " << logEntriesNum << endl;
 				sendAppendEntries(followerID, -1, -1);
 			}
 			else {
 				// next没到头，将后续的都发过去
-				if (nextIndex[followerID] < 0) nextIndex[followerID] = logEntriesNum - 1;
-				sendAppendEntries(followerID, nextIndex[followerID], logEntriesNum - 1);
+				//if (nextIndex[followerID] < 0) nextIndex[followerID] = logEntriesNum - 1;
+				sendAppendEntries(followerID, nextIndex[followerID] + 1, logEntriesNum - 1);
 			}
 			
 		}
@@ -122,7 +122,6 @@ void Leader::checkFollowers() {
 		else {
 			if (nextIndex[followerID] < 0) continue;
 			// needn't check the heartbreakt, cause if the heartbreak fail, it will be stop at the first one
-			
 			nextIndex[followerID]--;
 			sendAppendEntries(followerID, nextIndex[followerID], logEntries.size() - 1);
 		}
@@ -166,11 +165,12 @@ void Leader::updateCommit() {
 		int counter = 0;
 		for (auto it = matchIndex.begin(); it != matchIndex.end(); ++it)
 			if (commitIndex + 1 >= it->second) counter++;
-			else break;
+			//else break;
 		if (counter + 1 > matchIndex.size() / 2) commitIndex++;
 		else break;
 	}
 	if (commitIndex >= logEntries.size()) commitIndex = logEntries.size() - 1;
+	if (debug) cout << "Leader::updateCommit commitIndex " << commitIndex << endl;
 	// 若未超过阈值，则正常applyMsg
 	if (commitIndex >= 0 && commitIndex < snapshotThreshold) applyMsg();
 	// 若commit的数量超过阈值，则要开一条线程执行快照操作
@@ -182,7 +182,8 @@ void Leader::updateCommit() {
 void Leader::sendAppendEntries(int followerID, int start, int end, bool snapshot, int snapshotIndex) {
 	// 下标合法性判断
 	if (start >= 0 && (end >= logEntries.size() || start > end)) {
-		if (debug) cout << "Leader::sendAppendEntries: start " << start << " end " << end << " logEntries.size() " << logEntries.size() << endl;
+		if (debug) cout << "Leader::sendAppendEntries: start " << start << " end " << end << " logEntries.size() " 
+			<< logEntries.size() << " snapshot " << snapshot << " snapshotIndex " << snapshotIndex << endl;
 		throw exception("Leader::sendAppendEntries: index is illegal");
 	}
 	// follower id 合法性判断
@@ -198,7 +199,7 @@ void Leader::sendAppendEntries(int followerID, int start, int end, bool snapshot
 		if (prevIndex >= 0) prevTerm = logEntries[prevIndex].getTerm();
 		for (int index = start; index <= end; ++index) entries.push_back(logEntries[index]);
 	}
-		
+	if (debug) cout << "Leader::sendAppendEntries snapshotIndex " << snapshotIndex << endl;
 	// 待发送
 	if (snapshot) snapshotLastAppendEntries[followerID] = AppendEntries(currentTerm, ID, prevIndex, prevTerm, snapshotIndex, entries, snapshot);
 	else lastAppendEntries[followerID] = AppendEntries(currentTerm, ID, prevIndex, prevTerm, commitIndex, entries, snapshot);
@@ -214,7 +215,8 @@ bool Leader::sendAppendEntries(int followerID, bool snapshot) {
 	// 如果已经超出最大重发次数，则不重发，直接返回
 	if (sendNum >= maxResendNum) return false;
 	// 异步调用 发送请求
-	if (debug) cout << "Leader::sendAppendEntries send appendEntries to " << followerID << " content size is " << sendEntries.getEntries().size() << endl;
+
+	if (debug) cout << "Leader::sendAppendEntries send appendEntries to " << followerID << " content size is " << sendEntries.getEntries().size() << " snapshot " << snapshot << " commitIndex " << sendEntries.getLeaderCommit() << endl;
 	shared_future<Answer> ans = async(&RPC::invokeAppendEntries, &rpc, serverAddress[followerID], sendEntries);
 	// 将异步结果放入队列中
 	if (snapshot) snapshotReturnVal[followerID].push_back(ans);
@@ -237,6 +239,7 @@ void Leader::work() {
 		checkFollowers();
 		updateCommit();
 		persistence();
+		if (debug) cout << "Leader::work one round" << endl;
 		// 模拟停机
 		//if (crush(0.7)) break;
 	}
@@ -257,6 +260,7 @@ void Leader::registerHandleStart() {
 
 void Leader::snapshot() {
 	int snapshotIndex = commitIndex;
+	if (debug) cout << "Leader::snapshot  snapshotIndex " << snapshotIndex << endl;
 	// 通知每一个系统存快照，若半数以上通过则可以进入下一步（会阻塞一段时间）
 	informSnapshot(snapshotIndex);
 	// 修改自己的状态，通知上层应用写快照
@@ -268,7 +272,7 @@ void Leader::informSnapshot(int snapshotIndex) {
 	for (auto follower = followerReturnVal.begin(); follower != followerReturnVal.end(); ++follower) {
 		int followerID = follower->first;
 		// 发送snapshot的AppendEntries
-		sendAppendEntries(followerID, 0, snapshotIndex, true);
+		sendAppendEntries(followerID, 0, snapshotIndex, true, snapshotIndex);
 		// 初始化返回值
 		hasReturn[followerID] = false;
 	}
