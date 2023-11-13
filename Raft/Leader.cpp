@@ -16,7 +16,8 @@ Answer Leader::requestVote(rpc_conn conn, RequestVote requestVote) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	if (nextState) return nextState->requestVote(conn, requestVote);
 	//RequestVote requestVote(requestVoteCodedIntoString);
-	if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << endl;
+	if (debug) cout << "Leader::requestVote " << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << endl;
+	//if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << endl;
 	// term没有比当前leader大，可以直接拒绝，并返回当前的term
 	if (requestVote.getTerm() <= currentTerm) {
 		if (debug) cout << "reject " << requestVote.getCandidateId() << ", cause its term is old." << endl;
@@ -39,12 +40,12 @@ Answer Leader::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	if (nextState) return nextState->appendEntries(conn, appendEntries);
 	//AppendEntries appendEntries(appendEntriesCodedIntoString);
-	if (debug) cout << ID << " receive appendEntries Msg from " << appendEntries.getLeaderId() << endl;
+	if (debug) cout << "Leader::appendEntries " << ID << " receive appendEntries Msg from " << appendEntries.getLeaderId() << endl;
 	// timeoutCounter.setReceiveInfoFlag();
 	// term没有比当前leader大，可以直接拒绝，并返回当前的term
-	if (appendEntries.getTerm() <= currentTerm) {
-		if (debug) cout << "reject " << appendEntries.getLeaderId() << "'s appendEntries, cause its term is old." << endl;
-		return Answer( currentTerm, false );
+	if (appendEntries.getTerm() < currentTerm) {
+		if (debug) cout << "Leader::appendEntries " << "reject " << appendEntries.getLeaderId() << "'s appendEntries, cause its term is old." << endl;
+		return Answer( currentTerm, false);
 	}
 	// term更新，则退出当前状态，返回到Follower的状态
 	currentTerm = appendEntries.getTerm();
@@ -103,8 +104,9 @@ void Leader::checkFollowers() {
 		}
 		// 返回值为false：next--，重发一次
 		else {
-			// needn't check the heartbreakt, cause if the heartbreak fail, it will be stop at the first one
 			if (nextIndex[followerID] < 0) continue;
+			// needn't check the heartbreakt, cause if the heartbreak fail, it will be stop at the first one
+			
 			nextIndex[followerID]--;
 			sendAppendEntries(followerID, nextIndex[followerID], logEntries.size() - 1);
 		}
@@ -209,7 +211,7 @@ bool Leader::sendAppendEntries(int followerID, bool snapshot) {
 void Leader::work() {
 
 	if (debug) cout << endl << ID << " work as Leader" << endl;
-
+	if (nextState) return;
 	// 读入集群中所有server的地址，leader读入AppendEntriesAddress的地址
 	ServerAddressReader serverAddressReader("AppendEntriesAddress.conf");
 

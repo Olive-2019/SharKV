@@ -20,7 +20,7 @@ Answer Candidate::requestVote(rpc_conn conn, RequestVote requestVote) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	//RequestVote requestVote(requestVoteCodedIntoString);
 	if (nextState) return nextState->requestVote(conn, requestVote);
-	if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << endl;
+	if (debug) cout << "Candidate::requestVote " << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << endl;
 	// term没有比当前Candidate大，可以直接拒绝，并返回当前的term
 	if (requestVote.getTerm() <= currentTerm) {
 		if (debug) cout << "reject " << requestVote.getCandidateId() << ", cause its term is old." << endl;
@@ -32,6 +32,7 @@ Answer Candidate::requestVote(rpc_conn conn, RequestVote requestVote) {
 	// 理应在返回结果以后结束掉接收线程，但是此处无法这么处理
 	// 所以用nextState作为信号量，保证线程间同步释放
 	// 生成下一状态机
+	if (debug) cout << "Candidate::requestVote new Follower" << endl;
 	nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
 		startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
 
@@ -41,6 +42,7 @@ Answer Candidate::requestVote(rpc_conn conn, RequestVote requestVote) {
 void Candidate::timeoutCounterThread() {
 	// 超时返回，转换到candidate
 	if (timeoutCounter.run()) {
+		if (debug) cout << "Candidate::timeoutCounterThread new Candidate" << endl;
 		nextState = new Candidate(currentTerm + 1, ID, appendEntriesAddress, requestVoteAddress,
 			startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
 		//if (debug) cout << "Candidate " << ID << " timeout and quit." << endl;
@@ -69,6 +71,7 @@ Answer Candidate::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 	// 理应在返回结果以后结束掉接收线程，但是此处无法这么处理
 	// 所以用nextState作为信号量，保证线程间同步释放
 	// 生成下一状态机
+	if (debug) cout << "Candidate::appendEntries new Follower" << endl;
 	nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
 		startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
 	return Answer( currentTerm, true );
@@ -102,6 +105,7 @@ bool Candidate::checkRequestVote() {
 			rejectCounter++;
 			if (answer.getTerm() > currentTerm || rejectCounter > serverAddress.size() / 2) {
 				currentTerm = answer.getTerm();
+				if (debug) cout << "Candidate::checkRequestVote new Follower" << endl;
 				nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, applyMessageAddress,
 					commitIndex, lastApplied, logEntries);
 				return true;
@@ -153,6 +157,7 @@ bool Candidate::checkVoteResult() {
 void Candidate::work() {
 	if (debug) cout << endl << ID << " become Candidate" << endl;
 	// 读入集群中所有server的地址，candidate读入RequestVoteAddress的地址
+	if (nextState) return;
 	ServerAddressReader serverAddressReader("RequestVoteAddress.conf");
 	serverAddress = serverAddressReader.getNetWorkAddresses();
 	// 给自己投票
@@ -171,12 +176,14 @@ void Candidate::work() {
 		sleep_for(seconds(2));
 		if (!checkRequestVote()) {
 			// 没有决出胜负，重开
+			if (debug) cout << "Candidate::work new Candidate" << endl;
 			nextState = new Candidate(currentTerm + 1, ID, appendEntriesAddress, requestVoteAddress,
 				startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
 			return;
 		}
 		// 选举成功
 		if (checkVoteResult()) {
+			if (debug) cout << "Candidate::work new Leader" << endl;
 			nextState = new Leader(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
 				startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
 			return;

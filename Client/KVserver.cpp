@@ -1,9 +1,10 @@
 #include "KVserver.h"
 
 KVserver::KVserver(NetWorkAddress raftServerAddress, int applyMsgPort, string snapshotFilePath): 
-	raftServerAddress(raftServerAddress), snapshotPersistence(snapshotFilePath) {
+	raftServerAddress(raftServerAddress), snapshotPersistence(snapshotFilePath),debug(false) {
 	//NetWorkAddress raftServerAddress("127.0.0.1", 8291);
 	//Raft raft;
+	setDebug();
 	raft = new Raft(raftServerAddress, applyMsgPort, this);
 	try {
 		data = snapshotPersistence.read();
@@ -13,7 +14,11 @@ KVserver::KVserver(NetWorkAddress raftServerAddress, int applyMsgPort, string sn
 	}
 }
 KVserver::~KVserver() {
+	snapshotPersistence.write(data);
 	delete raft;
+}
+void KVserver::setDebug() {
+	debug = true;
 }
 
 // 真正执行命令，由Raft调用
@@ -35,6 +40,8 @@ void KVserver::execute(const Command& command) {
 		if (data.find(command.getKey()) == data.end()) readCache[command.getID()] = "";
 		else readCache[command.getID()] = data[command.getKey()];
 	}
+	if (debug) cout << "KVserver::execute " << endl;
+	printState();
 }
 // 写快照
 void KVserver::snapshot() {
@@ -49,4 +56,8 @@ bool KVserver::getData(int commandID, string& value) {
 	value = readCache[commandID];
 	readCache.erase(commandID);
 	return true;
+}
+void KVserver::printState() const {
+	for (auto it = data.begin(); it != data.end(); ++it) 
+		cout << it->first << ' ' << it->second << endl;
 }

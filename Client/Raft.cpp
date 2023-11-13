@@ -28,6 +28,7 @@ void Raft::registerApplyMsg() {
 
 StartAnswer Raft::start(Command command) {
     commands.push_back(command);
+    if (debug) cout << "Raft::start command " << command.getID() << " " << command.getKey() << endl;
     rpc_client client(raftServerAddress.first, raftServerAddress.second);// IP 地址，端口号
     /*设定超时 5s（不填默认为 3s），connect 超时返回 false，成功返回 true*/
     bool has_connected = client.connect(5);
@@ -85,5 +86,5 @@ void Raft::updateCommands(vector<Command> commands) {
                 this->commands[i] = commands[i];
         }
     }
-    commitedIndex = commands.size() - 1;
+    //commitedIndex = commands.size() - 1;
 }

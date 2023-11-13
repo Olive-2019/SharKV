@@ -11,6 +11,8 @@ class KVserver
 	Raft* raft;
 	NetWorkAddress raftServerAddress;
 	map<int, string> readCache;
+	bool debug;
+	void setDebug();
 public:
 	KVserver(NetWorkAddress raftServerAddress, int applyMsgPort = 8001, string snapshotFilePath = "snapshot.data");
 	~KVserver();
@@ -22,5 +24,7 @@ public:
 	void acceptCommand(const Command& command);
 	// 查询cache中的数据，如果查到了，即从cache中删除，返回值代表是否查到
 	bool getData(int commandID, string& value);
+	// print the data in kv server
+	void printState() const;
 };
 

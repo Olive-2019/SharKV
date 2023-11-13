@@ -32,6 +32,7 @@ StartAnswer Follower::start(rpc_conn conn, Command command) {
 	// 不能在这加锁，否则其他线程都要等着转发start的返回值
 	//lock_guard<mutex> lockGuard(receiveInfoLock);
 	// 假如有leader，转发给leader，没有就给自己加
+	if (debug) cout << "Follower::start try to redirect to " << leaderID << endl;
 	if (serverAddress.find(leaderID) != serverAddress.end())
 		return rpc.invokeRemoteStart(serverAddress[leaderID], command);
 	
@@ -50,6 +51,7 @@ Answer Follower::requestVote(rpc_conn conn, RequestVote requestVote) {
 	//if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << " content is " << requestVote.code() << endl;
 	//直接返回false：term < currentTerm
 	if (nextState) return nextState->requestVote(conn, requestVote);
+	if (debug) cout << "Follower::requestVote " << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << endl;
 	if (requestVote.getTerm() < currentTerm) return Answer(currentTerm, false);
 	currentTerm = requestVote.getTerm();
 	//如果 （votedFor == null || votedFor == candidateId） && candidate的log比当前节点新，投票给该节点，否则拒绝该节点
@@ -79,6 +81,7 @@ Answer Follower::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 	//直接返回false：term < currentTerm 
 	if (appendEntries.getTerm() < currentTerm) return Answer(currentTerm, false);
 	// 心跳返回true
+	leaderID = appendEntries.getLeaderId();
 	if (!appendEntries.getEntries().size()) return Answer(currentTerm, true);
 	//直接返回false：prevLogIndex/Term对应的log不存在
 	if (appendEntries.getPrevLogIndex() >= 0 && (appendEntries.getPrevLogIndex() >= logEntries.size()
@@ -108,6 +111,7 @@ void Follower::work() {
 
 	if (debug) cout << endl << ID << " become Follower" << endl;
 	// 读入集群中所有server的地址，follower读入StartAddress的地址
+	if (nextState) return;
 	ServerAddressReader serverAddressReader("StartAddress.conf");
 	serverAddress = serverAddressReader.getNetWorkAddresses();
 	// 开启计时器
