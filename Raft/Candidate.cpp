@@ -19,6 +19,7 @@ Candidate::~Candidate() {
 Answer Candidate::requestVote(rpc_conn conn, RequestVote requestVote) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	//RequestVote requestVote(requestVoteCodedIntoString);
+	if (nextState) return nextState->requestVote(conn, requestVote);
 	if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << endl;
 	// term没有比当前Candidate大，可以直接拒绝，并返回当前的term
 	if (requestVote.getTerm() <= currentTerm) {
@@ -30,12 +31,10 @@ Answer Candidate::requestVote(rpc_conn conn, RequestVote requestVote) {
 
 	// 理应在返回结果以后结束掉接收线程，但是此处无法这么处理
 	// 所以用nextState作为信号量，保证线程间同步释放
-	if (!nextState || nextState->getCurrentTerm() <= currentTerm) {
-		delete nextState;
-		// 生成下一状态机
-		nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
-			startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
-	}
+	// 生成下一状态机
+	nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
+		startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
+
 	return Answer( currentTerm, true );
 }
 
@@ -55,6 +54,7 @@ void Candidate::timeoutCounterThread() {
 // 只要对方的term不比自己小就接受对方为leader
 Answer Candidate::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
+	if (nextState) return nextState->appendEntries(conn, appendEntries);
 	//if (debug) cout << ID << " receive appendEntries Msg" << endl;
 	//AppendEntries appendEntries(appendEntriesCodedIntoString);
 	// term没有比当前Candidate大，可以直接拒绝，并返回当前的term
@@ -68,12 +68,9 @@ Answer Candidate::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 	else applyMsg();
 	// 理应在返回结果以后结束掉接收线程，但是此处无法这么处理
 	// 所以用nextState作为信号量，保证线程间同步释放
-	if (!nextState || nextState->getCurrentTerm() <= currentTerm) {
-		delete nextState;
-		// 生成下一状态机
-		nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
-			startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
-	}
+	// 生成下一状态机
+	nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
+		startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
 	return Answer( currentTerm, true );
 }
 

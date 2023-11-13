@@ -14,6 +14,7 @@ Leader::~Leader() {
 // 接收RequestVote
 Answer Leader::requestVote(rpc_conn conn, RequestVote requestVote) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
+	if (nextState) return nextState->requestVote(conn, requestVote);
 	//RequestVote requestVote(requestVoteCodedIntoString);
 	if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << endl;
 	// term没有比当前leader大，可以直接拒绝，并返回当前的term
@@ -36,6 +37,7 @@ Answer Leader::requestVote(rpc_conn conn, RequestVote requestVote) {
 // 接收AppendEntries
 Answer Leader::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
+	if (nextState) return nextState->appendEntries(conn, appendEntries);
 	//AppendEntries appendEntries(appendEntriesCodedIntoString);
 	if (debug) cout << ID << " receive appendEntries Msg from " << appendEntries.getLeaderId() << endl;
 	// timeoutCounter.setReceiveInfoFlag();
@@ -46,16 +48,14 @@ Answer Leader::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 	}
 	// term更新，则退出当前状态，返回到Follower的状态
 	currentTerm = appendEntries.getTerm();
-	// 将entries添加到当前列表中（调用函数，还需要判断其能否添加，这一步其实已经算是follower的工作了）
-	bool canAppend = appendEntriesReal(appendEntries.getPrevLogIndex(), appendEntries.getPrevLogTerm(),
-		appendEntries.getLeaderCommit(), appendEntries.getEntries());
-	if (!nextState || nextState->getCurrentTerm() <= currentTerm) {
-		delete nextState;
-		// 生成下一状态机
-		nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
-			startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
-	}
-	return Answer(currentTerm, canAppend);
+	// 生成下一状态机
+	nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
+		startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);// 将entries添加到当前列表中（调用函数，还需要判断其能否添加，这一步其实已经算是follower的工作了）
+	return nextState->appendEntries(conn, appendEntries);
+	//bool canAppend = appendEntriesReal(appendEntries.getPrevLogIndex(), appendEntries.getPrevLogTerm(),
+		//appendEntries.getLeaderCommit(), appendEntries.getEntries());
+	
+	//return Answer(currentTerm, canAppend);
 }
 
 void Leader::checkFollowers() {

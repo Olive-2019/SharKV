@@ -49,6 +49,7 @@ Answer Follower::requestVote(rpc_conn conn, RequestVote requestVote) {
 	//RequestVote requestVote(requestVoteCodedIntoString);
 	//if (debug) cout << ID << " receive requestVote Msg from " << requestVote.getCandidateId() << " content is " << requestVote.code() << endl;
 	//直接返回false：term < currentTerm
+	if (nextState) return nextState->requestVote(conn, requestVote);
 	if (requestVote.getTerm() < currentTerm) return Answer(currentTerm, false);
 	currentTerm = requestVote.getTerm();
 	//如果 （votedFor == null || votedFor == candidateId） && candidate的log比当前节点新，投票给该节点，否则拒绝该节点
@@ -65,6 +66,7 @@ Answer Follower::requestVote(rpc_conn conn, RequestVote requestVote) {
 // 接收AppendEntries
 Answer Follower::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
+	if (nextState) return nextState->appendEntries(conn, appendEntries);
 	//AppendEntries appendEntries(appendEntriesCodedIntoString);
 	//if (debug) cout << "Follower::appendEntries : content " << appendEntriesCodedIntoString << endl;
 	if (debug) cout << "Follower::appendEntries from " << appendEntries.getLeaderId()
