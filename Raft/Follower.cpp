@@ -101,7 +101,7 @@ Answer Follower::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 	}
 	commitIndex = appendEntries.getLeaderCommit();
 	// 若有写快照标志，则修改当前系统状态并通知上层应用写快照，若无，则通知上层应用当前提交的命令
-	if (appendEntries.isSnapshot()) snapShotModifyState(commitIndex);
+	if (appendEntries.isSnapshot() && commitIndex >= 0) snapShotModifyState(commitIndex);
 	else if (commitIndex >= 0) applyMsg();
 	if (debug) cout << "Follower::appendEntries real " << appendEntries.getEntries()[0].getCommand().getKey() << endl;
 	return Answer( currentTerm, true );

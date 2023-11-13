@@ -6,13 +6,13 @@ enum CommandType
 };
 class Command
 {
-	static int IDCounter;
-	static mutex IDCounterLock;
+	/*static int IDCounter;
+	static mutex IDCounterLock;*/
 	// 当前命令的类型
 	int commandType;
 	// 命令的参数
 	string key, value;
-	// 命令的ID：非唯一标识符，
+	// 命令的ID：非唯一标识符，只能做近似处理
 	int ID;
 public:
 	Command() {}

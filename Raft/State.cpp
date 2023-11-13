@@ -49,8 +49,8 @@ void State::applyMsg(bool snapshot, int snapshotIndex) {
 	* 若为普通applyMsg，则为commitedIndex
 	*/
 	int applyIndex = commitIndex;
-	if (debug) cout << "State::applyMsg applyIndex: " << applyIndex << " snapshot " << snapshot << endl;
 	if (snapshot) applyIndex = snapshotIndex;
+	if (debug) cout << "State::applyMsg applyIndex: " << applyIndex << " snapshot " << snapshot << endl;
 	if (applyIndex < 0 || applyIndex >= logEntries.size()) throw exception("State::applyMsg logical error: index is negative or greater than the log");
 	vector<Command> commands;
 	// 发送index包含的所有命令

@@ -12,7 +12,17 @@ int main(int argc, char* argv[]) {
 	Clerk clerk(raftServerAddress, applyMsgPort, snapshotFilePath);
 
 	clerk.put("Lam", "55190906");
+	clerk.put("Lam", "55190906");
+	clerk.put("Lam", "55190906");
+	clerk.put("Lam", "55190906");
 	clerk.put("somebody", "55190922");
+	clerk.put("somebody", "55190922");
+	clerk.put("somebody", "55190922");
+	clerk.put("somebody", "55190922");
+	clerk.put("somebody", "55190922");
+	clerk.append("Lam", "123");
+	clerk.append("Lam", "123");
+	clerk.append("Lam", "123");
 	clerk.append("Lam", "123");
 	cout << clerk.get("Lam") << endl;
 	return 0;

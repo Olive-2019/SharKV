@@ -6,6 +6,22 @@ Leader::Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, Net
 	State(currentTerm, ID, appendEntriesAddress, requestVoteAddress, startAddress, applyMessageAddress,
 		commitIndex, lastApplied, logEntries, votedFor), maxResendNum(maxResendNum), snapshotThreshold(snapshotThreshold) {
 	if (debug) cout << "Leader::Leader new a leader" << endl;
+	// 读入集群中所有server的地址，leader读入AppendEntriesAddress的地址
+	ServerAddressReader serverAddressReader("AppendEntriesAddress.conf");
+
+	serverAddress = serverAddressReader.getNetWorkAddresses();
+	// 上任的操作：发送心跳、初始化nextIndex和matchIndex
+	for (auto follower = serverAddress.begin(); follower != serverAddress.end(); ++follower) {
+		int followerID = follower->first;
+		// 不初始化自己
+		if (followerID == ID) continue;
+		// 初始化next为当前log的最后一个
+		nextIndex[followerID] = logEntries.size() - 1;
+		// 初始化matchAddress为-1
+		matchIndex[followerID] = -1;
+		// 发送心跳信息(非阻塞)
+		sendAppendEntries(followerID, nextIndex[followerID], nextIndex[followerID]);
+	}
 }
 Leader::~Leader() {
 	if (debug) cout << ID << " will not be Leader any more." << endl;
@@ -212,22 +228,7 @@ void Leader::work() {
 
 	if (debug) cout << endl << ID << " work as Leader" << endl;
 	if (nextState) return;
-	// 读入集群中所有server的地址，leader读入AppendEntriesAddress的地址
-	ServerAddressReader serverAddressReader("AppendEntriesAddress.conf");
-
-	serverAddress = serverAddressReader.getNetWorkAddresses();
-	// 上任的操作：发送心跳、初始化nextIndex和matchIndex
-	for (auto follower = serverAddress.begin(); follower != serverAddress.end(); ++follower) {
-		int followerID = follower->first;
-		// 不初始化自己
-		if (followerID == ID) continue;
-		// 初始化next为当前log的最后一个
-		nextIndex[followerID] = logEntries.size() - 1;
-		// 初始化matchAddress为-1
-		matchIndex[followerID] = -1;
-		// 发送心跳信息(非阻塞)
-		sendAppendEntries(followerID, nextIndex[followerID], nextIndex[followerID]);
-	}
+	
 
 	// 用nextState作为同步信号量,超时/收到更新的信息的时候就可以退出了
 	while (!nextState) {
@@ -295,6 +296,5 @@ void Leader::snapShotModifyState(int snapshotIndex) {
 		nextIndex[followerID] -= snapshotIndex;
 		// 重置matchAddress
 		matchIndex[followerID] -= snapshotIndex;
-		// TODO:通知每一个follower要存快照了
 	}
 }

@@ -57,23 +57,24 @@ void Candidate::timeoutCounterThread() {
 Answer Candidate::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	if (nextState) return nextState->appendEntries(conn, appendEntries);
-	//if (debug) cout << ID << " receive appendEntries Msg" << endl;
+	if (debug) cout << "Candidate::appendEntries " << ID << " receive appendEntries Msg from " << appendEntries.getLeaderId() << endl;
 	//AppendEntries appendEntries(appendEntriesCodedIntoString);
 	// term没有比当前Candidate大，可以直接拒绝，并返回当前的term
 	if (appendEntries.getTerm() < currentTerm) return Answer( currentTerm, false );
 	// term更新，则退出当前状态，返回到Follower的状态，下面执行的其实follower的逻辑
 	currentTerm = appendEntries.getTerm();
 	// 将entries添加到当前列表中（调用函数，还需要判断其能否添加，这一步其实已经算是follower的工作了）
-	bool canAppend = appendEntriesReal(appendEntries.getPrevLogIndex(), appendEntries.getPrevLogTerm(),
-		appendEntries.getLeaderCommit(), appendEntries.getEntries());
-	if (appendEntries.isSnapshot()) snapShotModifyState(commitIndex);
-	else applyMsg();
-	// 理应在返回结果以后结束掉接收线程，但是此处无法这么处理
-	// 所以用nextState作为信号量，保证线程间同步释放
-	// 生成下一状态机
+	//bool canAppend = appendEntriesReal(appendEntries.getPrevLogIndex(), appendEntries.getPrevLogTerm(),
+	//	appendEntries.getLeaderCommit(), appendEntries.getEntries());
+	//if (appendEntries.isSnapshot()) snapShotModifyState(commitIndex);
+	//else applyMsg();
+	//// 理应在返回结果以后结束掉接收线程，但是此处无法这么处理
+	//// 所以用nextState作为信号量，保证线程间同步释放
+	//// 生成下一状态机
 	if (debug) cout << "Candidate::appendEntries new Follower" << endl;
 	nextState = new Follower(currentTerm, ID, appendEntriesAddress, requestVoteAddress,
 		startAddress, applyMessageAddress, commitIndex, lastApplied, logEntries);
+	nextState->appendEntries(conn, appendEntries);
 	return Answer( currentTerm, true );
 }
 
