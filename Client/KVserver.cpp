@@ -45,6 +45,7 @@ void KVserver::execute(const Command& command) {
 }
 // 写快照
 void KVserver::snapshot() {
+	if (debug) cout << "KVserver::snapshot" << endl;
 	snapshotPersistence.write(data);
 }
 // 接收命令，丢给Raft系统

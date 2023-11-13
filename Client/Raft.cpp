@@ -71,7 +71,7 @@ void Raft::execute(int newCommitIndex) {
 
 void Raft::snapshot(int snapshotIndex) {
     // 将当前状态写磁盘
-    //if (debug) cout << "Raft::snapshot write disk" << endl;
+    if (debug) cout << "Raft::snapshot write disk" << endl;
     kvServer->snapshot();
     // 修改状态，要加一把大锁
     lock_guard<mutex> lockGuard(stateLock);
@@ -79,12 +79,17 @@ void Raft::snapshot(int snapshotIndex) {
     commitedIndex -= (snapshotIndex + 1);
 }
 void Raft::updateCommands(vector<Command> commands) {
-    for (int i = 0; i < commands.size(); ++i) {
-        if (i >= this->commands.size()) this->commands.push_back(commands[i]);
-        else {
-            if (!(commands[i] == this->commands[i])) 
-                this->commands[i] = commands[i];
+    // 找到第一个相同的command
+    int firstIndex = this->commands.size();
+    for (int i = 0; i < this->commands.size(); ++i) 
+        if (commands[0] == this->commands[i]) {
+            firstIndex = i;
+            break;
         }
+    // 后面就是覆写or追加
+    for (int i = 0; i < commands.size(); ++i) {
+        if (i + firstIndex >= this->commands.size()) this->commands.push_back(commands[i]);
+        else this->commands[i + firstIndex] = commands[i];
     }
     //commitedIndex = commands.size() - 1;
 }
