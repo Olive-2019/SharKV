@@ -156,7 +156,7 @@ bool Candidate::checkVoteResult() {
 }
 
 void Candidate::work() {
-	if (debug) cout << endl << ID << " become Candidate" << endl;
+	if (debug) cout << endl << ID << " work as Candidate" << endl;
 	// 读入集群中所有server的地址，candidate读入RequestVoteAddress的地址
 	if (nextState) return;
 	ServerAddressReader serverAddressReader("RequestVoteAddress.conf");

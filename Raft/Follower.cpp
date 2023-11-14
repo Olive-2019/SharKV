@@ -88,7 +88,7 @@ Answer Follower::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 		|| logEntries[appendEntries.getPrevLogIndex()].getTerm() != appendEntries.getTerm()))
 		return Answer(currentTerm, false);
 	currentTerm = appendEntries.getTerm();
-	if (debug) cout << "Follower::appendEntries here" << endl;
+	//if (debug) cout << "Follower::appendEntries here" << endl;
 	int index = appendEntries.getPrevLogIndex() + 1;
 	// 更新leaderID
 	leaderID = appendEntries.getLeaderId();
@@ -100,7 +100,7 @@ Answer Follower::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 		index++;
 	}
 	commitIndex = appendEntries.getLeaderCommit();
-	if (debug) cout << "Follower::appendEntries newCommitIndex " << commitIndex << endl;
+	//if (debug) cout << "Follower::appendEntries newCommitIndex " << commitIndex << endl;
 	// 若有写快照标志，则修改当前系统状态并通知上层应用写快照，若无，则通知上层应用当前提交的命令
 	if (appendEntries.isSnapshot()) snapShotModifyState(commitIndex);
 	else if (commitIndex >= 0) applyMsg();
@@ -110,7 +110,7 @@ Answer Follower::appendEntries(rpc_conn conn, AppendEntries appendEntries) {
 void Follower::work() {
 
 
-	if (debug) cout << endl << ID << " become Follower" << endl;
+	if (debug) cout << endl << ID << " work as Follower" << endl;
 	// 读入集群中所有server的地址，follower读入StartAddress的地址
 	if (nextState) return;
 	ServerAddressReader serverAddressReader("StartAddress.conf");

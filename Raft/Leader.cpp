@@ -170,7 +170,7 @@ void Leader::updateCommit() {
 		else break;
 	}
 	if (commitIndex >= logEntries.size()) commitIndex = logEntries.size() - 1;
-	if (debug) cout << "Leader::updateCommit commitIndex " << commitIndex << endl;
+	//if (debug) cout << "Leader::updateCommit commitIndex " << commitIndex << endl;
 	// 若未超过阈值，则正常applyMsg
 	if (commitIndex >= 0 && commitIndex < snapshotThreshold) applyMsg();
 	// 若commit的数量超过阈值，则要开一条线程执行快照操作
@@ -199,7 +199,7 @@ void Leader::sendAppendEntries(int followerID, int start, int end, bool snapshot
 		if (prevIndex >= 0) prevTerm = logEntries[prevIndex].getTerm();
 		for (int index = start; index <= end; ++index) entries.push_back(logEntries[index]);
 	}
-	if (debug) cout << "Leader::sendAppendEntries snapshotIndex " << snapshotIndex << endl;
+	//if (debug) cout << "Leader::sendAppendEntries snapshotIndex " << snapshotIndex << endl;
 	// 待发送
 	if (snapshot) snapshotLastAppendEntries[followerID] = AppendEntries(currentTerm, ID, prevIndex, prevTerm, snapshotIndex, entries, snapshot);
 	else lastAppendEntries[followerID] = AppendEntries(currentTerm, ID, prevIndex, prevTerm, commitIndex, entries, snapshot);
@@ -239,7 +239,7 @@ void Leader::work() {
 		checkFollowers();
 		updateCommit();
 		persistence();
-		if (debug) cout << "Leader::work one round" << endl;
+		//if (debug) cout << "Leader::work one round" << endl;
 		// 模拟停机
 		//if (crush(0.7)) break;
 	}

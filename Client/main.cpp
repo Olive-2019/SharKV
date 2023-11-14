@@ -7,7 +7,8 @@ int main(int argc, char* argv[]) {
 		cout << argc << endl;
 		// 读入命令行参数
 		applyMsgPort = atoi(argv[1]);
-		raftServerAddress = NetWorkAddress(string(argv[2]), atoi(argv[3]));
+		acceptCommandPort = atoi(argv[2]);
+		raftServerAddress = NetWorkAddress(string(argv[3]), atoi(argv[4]));
 	}
 	string snapshotFilePath = "snapshot" + to_string(applyMsgPort) + ".data";
 	KVserver kvServer(raftServerAddress, applyMsgPort, acceptCommandPort, snapshotFilePath);
