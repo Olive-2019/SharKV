@@ -10,10 +10,11 @@ int main() {
 	clerk.put("somebody", "55190922");
 	clerk.put("somebody", "55190922");
 	clerk.put("somebody", "55190922");
+	clerk.aget("Lam");
 	clerk.put("somebody", "55190922");
 	clerk.append("Lam", "123");
 	clerk.append("Lam", "123");
 	clerk.append("Lam", "123");
 	clerk.append("Lam", "123");
-	//cout << clerk.get("Lam") << endl;
+	clerk.aget("Lam");
 }

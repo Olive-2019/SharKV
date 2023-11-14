@@ -140,9 +140,11 @@ StartAnswer State::start(rpc_conn conn, Command command) {
 	lock_guard<mutex> lockGuard(receiveInfoLock);
 	if (debug) cout << "State::start " << ID << " receive the command from client, content: " << command.getKey() << " " << command.getValue() << endl;
 	//将client给的数据加入当前列表中
+	command.setID(logEntries.size());
 	logEntries.push_back(LogEntry(currentTerm, command));
 	// 有新增加的entries，更新lastApplied
 	lastApplied = logEntries.size() - 1;
+	
 	return StartAnswer{ currentTerm, lastApplied };
 }
 State* State::run() {

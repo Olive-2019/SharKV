@@ -11,11 +11,16 @@ LogEntry::LogEntry(string codedString) {
 	int ID = getFirstNumber(codedString, index);
 	string key = getNextString(codedString, index), value = getNextString(codedString, index);
 	CommandType commandType = CommandType(getFirstNumber(codedString, index));
-	command = Command(commandType, ID, key, value);
+	NetWorkAddress clerkAddress;
+	clerkAddress.first = getNextString(codedString, index);
+	clerkAddress.second = getFirstNumber(codedString, index);
+	command = Command(commandType, clerkAddress, key, value);
+	command.setID(ID);
 }
 string LogEntry::code() const {
 	string buff = to_string(term) + " " + to_string(command.getID()) + " " + command.getKey()
-		+ " " + command.getValue() + " " + to_string(command.getType());
+		+ " " + command.getValue() + " " + to_string(command.getType()) + " " + command.getClerkAddress().first 
+		+ " " + to_string(command.getClerkAddress().second);
 	return buff;
 }
 
