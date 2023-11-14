@@ -4,6 +4,6 @@
 class RPC
 {
 public:
-	void invokeRemoteAcceptCommand(NetWorkAddress address, Command command);
+	int invokeRemoteAcceptCommand(NetWorkAddress address, Command command);
 };
 

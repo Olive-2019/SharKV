@@ -3,8 +3,10 @@
 Clerk::Clerk(NetWorkAddress kvServerAddress) : kvServerAddress(kvServerAddress) {
 
 }
-void Clerk::invokeCommand(Command command) {
-	rpc.invokeRemoteAcceptCommand(kvServerAddress, command);
+int Clerk::invokeCommand(Command command) {
+	int commandID = rpc.invokeRemoteAcceptCommand(kvServerAddress, command);
+	cout << "Clerk::invokeCommand " << commandID << endl;
+	return commandID;
 }
 
 void Clerk::put(string key, string value) {

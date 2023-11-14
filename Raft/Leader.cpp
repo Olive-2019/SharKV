@@ -283,6 +283,7 @@ void Leader::informSnapshot(int snapshotIndex) {
 			if (hasReturn[followerID]) continue;
 			if (checkOneFollowerReturnValue(followerID, true)) {
 				hasReturn[followerID] = true;
+				//nextIndex[followerID] -= (snapshotIndex + 1);
 				counter++;
 			}
 		}
@@ -297,8 +298,10 @@ void Leader::snapShotModifyState(int snapshotIndex) {
 	for (auto follower = nextIndex.begin(); follower != nextIndex.end(); ++follower) {
 		int followerID = follower->first;
 		// ÷ÿ÷√next
-		nextIndex[followerID] -= snapshotIndex;
+		nextIndex[followerID] -= (snapshotIndex + 1);
+		if (nextIndex[followerID] < -1) nextIndex[followerID] = -1;
 		// ÷ÿ÷√matchAddress
-		matchIndex[followerID] -= snapshotIndex;
+		matchIndex[followerID] -= (snapshotIndex + 1);
+		if (matchIndex[followerID] < 0) matchIndex[followerID] = 0;
 	}
 }

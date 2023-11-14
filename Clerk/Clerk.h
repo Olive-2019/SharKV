@@ -5,7 +5,7 @@ class Clerk
 {
 	NetWorkAddress kvServerAddress;
 	RPC rpc;
-	void invokeCommand(Command command);
+	int invokeCommand(Command command);
 public:
 	Clerk(NetWorkAddress kvServerAddress);
 	void put(string key, string value);

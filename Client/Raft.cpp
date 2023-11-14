@@ -27,7 +27,6 @@ void Raft::registerApplyMsg() {
 }
 
 StartAnswer Raft::start(Command command) {
-    commands.push_back(command);
     if (debug) cout << "Raft::start command " << command.getID() << " " << command.getKey() << endl;
     rpc_client client(raftServerAddress.first, raftServerAddress.second);// IP 地址，端口号
     /*设定超时 5s（不填默认为 3s），connect 超时返回 false，成功返回 true*/
@@ -40,6 +39,8 @@ StartAnswer Raft::start(Command command) {
     try {
         StartAnswer ans = client.call<StartAnswer>("start", command);// funcName 为事先注册好的服务名，需要一个 arg 参数
         //if (debug) cout << "Raft::start commnad " << command << " term " << ans.term << " index " << ans.index << endl;
+        command.setID(ans.index);
+        commands.push_back(command);
         return ans;
     }
     catch (exception e) {

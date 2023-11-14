@@ -23,6 +23,7 @@ public:
 	CommandType getType() const { return CommandType(commandType); }
 	string getKey() const { return key; }
 	string getValue() const { return value; }
+	void setID(int ID);
 
 };
 

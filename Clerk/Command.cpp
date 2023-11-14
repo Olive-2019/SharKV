@@ -10,3 +10,6 @@ bool Command::operator==(Command other)const {
 	return ID == other.getID() && key == other.getKey() &&
 		value == other.getValue() && commandType == other.getType();
 }
+void Command::setID(int ID) {
+	this->ID = ID;
+}
