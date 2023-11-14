@@ -1,6 +1,6 @@
 #include "Command.h"
-Command::Command(CommandType commandType, string key , string value)
-	:commandType(commandType), key(key),  value(value){
+Command::Command(CommandType commandType, NetWorkAddress clerkAddress, string key , string value)
+	:commandType(commandType), key(key),  value(value), clerkAddress(clerkAddress) {
 	/*lock_guard<mutex> lockGuard(IDCounterLock);
 	ID = IDCounter++;*/
 }

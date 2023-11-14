@@ -3,6 +3,7 @@
 #include "Command.h"
 #include "SnapshotPersistence.h"
 #include "Raft.h"
+#include "RPC.h"
 class Raft;
 class KVserver
 {
@@ -10,7 +11,8 @@ class KVserver
 	SnapshotPersistence snapshotPersistence;
 	Raft* raft;
 	NetWorkAddress raftServerAddress;
-	map<int, string> readCache;
+	RPC rpc;
+	// 打印调试信息的开关
 	bool debug;
 	void setDebug();
 	// 给Clerk开放的接口
@@ -30,7 +32,5 @@ public:
 	void snapshot();
 	// 接收命令，丢给Raft系统
 	int acceptCommand(rpc_conn conn, const Command& command);
-	// 查询cache中的数据，如果查到了，即从cache中删除，返回值代表是否查到
-	bool getData(int commandID, string& value);
 };
 

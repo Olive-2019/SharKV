@@ -40,11 +40,17 @@ void KVserver::execute(const Command& command) {
 		break;
 	default:
 		// 数据库中不存在，则返回一个空字符串，存在则写到cache中去
-		if (data.find(command.getKey()) == data.end()) readCache[command.getID()] = "";
-		else readCache[command.getID()] = data[command.getKey()];
+		string value;
+		if (data.find(command.getKey()) != data.end()) value = data[command.getKey()];
+		rpc.invokeGetData(command.getClerkAddress(), command.getID(), value);
 	}
-	if (debug) cout << "KVserver::execute " << endl;
-	printState();
+	if (debug) {
+		cout << "KVserver::execute " << endl;
+		printState();
+		cout << endl;
+	}
+	
+
 }
 // 写快照
 void KVserver::snapshot() {
@@ -63,13 +69,7 @@ int KVserver::acceptCommand(rpc_conn conn, const Command& command) {
 	StartAnswer startAnswer = raft->start(command);
 	return startAnswer.index;
 }
-bool KVserver::getData(int commandID, string& value) {
-	
-	if (readCache.find(commandID) == readCache.end()) return false;
-	value = readCache[commandID];
-	readCache.erase(commandID);
-	return true;
-}
+
 void KVserver::printState() const {
 	for (auto it = data.begin(); it != data.end(); ++it) 
 		cout << it->first << ' ' << it->second << endl;

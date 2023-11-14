@@ -137,6 +137,7 @@
     <ClCompile Include="KVserver.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Raft.cpp" />
+    <ClCompile Include="RPC.cpp" />
     <ClCompile Include="SnapshotPersistence.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -145,6 +146,7 @@
     <ClInclude Include="FileOperator.h" />
     <ClInclude Include="KVserver.h" />
     <ClInclude Include="POJO.h" />
+    <ClInclude Include="RPC.h" />
     <ClInclude Include="SnapshotPersistence.h" />
     <ClInclude Include="source.h" />
     <ClInclude Include="StartAnswer.h" />
