@@ -63,7 +63,7 @@ void State::snapShotModifyState(int snapshotIndex) {
 	// 通知上层应用快照写磁盘
 	applyMsg(true, snapshotIndex);
 	// 删除命令
-	logEntries.erase(logEntries.begin(), logEntries.begin() + snapshotIndex);
+	logEntries.erase(logEntries.begin(), logEntries.begin() + snapshotIndex + 1);
 	// 修改commit状态
 	commitIndex -= (snapshotIndex + 1);
 }
