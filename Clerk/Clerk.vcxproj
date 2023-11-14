@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{bab9046f-fca2-4f5f-97eb-766af888b3e7}</ProjectGuid>
-    <RootNamespace>Client</RootNamespace>
+    <ProjectGuid>{09a35fb8-b379-4c71-b2e5-b162c61dcddd}</ProjectGuid>
+    <RootNamespace>Clerk</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -71,8 +71,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>D:\Software\boost_1_83_0;C:\Users\14972\source\repos\Raft\rest_rpc;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Software\boost_1_83_0\stage\lib;C:\Users\14972\source\repos\Raft\rest_rpc;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\Software\boost_1_83_0;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\Software\boost_1_83_0\stage\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -112,7 +112,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\Software\boost_1_83_0;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\Software\boost_1_83_0\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -132,23 +132,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Command.cpp" />
-    <ClCompile Include="FileOperator.cpp" />
-    <ClCompile Include="KVserver.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="Raft.cpp" />
-    <ClCompile Include="SnapshotPersistence.cpp" />
+    <ClInclude Include="Clerk.h" />
+    <ClInclude Include="Command.h" />
+    <ClInclude Include="RPC.h" />
+    <ClInclude Include="source.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ApplyMsg.h" />
-    <ClInclude Include="Command.h" />
-    <ClInclude Include="FileOperator.h" />
-    <ClInclude Include="KVserver.h" />
-    <ClInclude Include="POJO.h" />
-    <ClInclude Include="SnapshotPersistence.h" />
-    <ClInclude Include="source.h" />
-    <ClInclude Include="StartAnswer.h" />
-    <ClInclude Include="Raft.h" />
+    <ClCompile Include="Clerk.cpp" />
+    <ClCompile Include="Command.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="RPC.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

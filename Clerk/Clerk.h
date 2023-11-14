@@ -1,11 +1,11 @@
 #pragma once
-#include "KVserver.h"
+#include "source.h"
 #include "RPC.h"
 class Clerk
 {
-	// 连接kv数据库的地址
 	NetWorkAddress kvServerAddress;
 	RPC rpc;
+	void invokeCommand(Command command);
 public:
 	Clerk(NetWorkAddress kvServerAddress);
 	void put(string key, string value);
@@ -15,4 +15,3 @@ public:
 	// 异步的get，返回commandID
 	int aget(string key);
 };
-

@@ -1,7 +1,7 @@
 #include "KVserver.h"
 
-KVserver::KVserver(NetWorkAddress raftServerAddress, int applyMsgPort, string snapshotFilePath): 
-	raftServerAddress(raftServerAddress), snapshotPersistence(snapshotFilePath),debug(false) {
+KVserver::KVserver(NetWorkAddress raftServerAddress, int applyMsgPort, int acceptCommandPort, string snapshotFilePath):
+	raftServerAddress(raftServerAddress), snapshotPersistence(snapshotFilePath),debug(false), acceptCommandPort(acceptCommandPort) {
 	//NetWorkAddress raftServerAddress("127.0.0.1", 8291);
 	//Raft raft;
 	setDebug();
@@ -12,10 +12,13 @@ KVserver::KVserver(NetWorkAddress raftServerAddress, int applyMsgPort, string sn
 	catch (exception e) {
 		cout << "welcome to KV Server with Raft" << endl;
 	}
+	acceptCommandThread = new thread(&KVserver::registerAcceptCommand, this);
 }
 KVserver::~KVserver() {
 	snapshotPersistence.write(data);
 	delete raft;
+	acceptCommandThread->join();
+	delete acceptCommandThread;
 }
 void KVserver::setDebug() {
 	debug = true;
@@ -48,8 +51,15 @@ void KVserver::snapshot() {
 	if (debug) cout << "KVserver::snapshot" << endl;
 	snapshotPersistence.write(data);
 }
+
+void KVserver::registerAcceptCommand() {
+	rpc_server server(acceptCommandPort, 6);
+	server.register_handler("acceptCommand", &KVserver::acceptCommand, this);
+	server.run();
+}
+
 // 接收命令，丢给Raft系统
-void KVserver::acceptCommand(const Command& command) {
+void KVserver::acceptCommand(rpc_conn conn, const Command& command) {
 	raft->start(command);
 }
 bool KVserver::getData(int commandID, string& value) {
