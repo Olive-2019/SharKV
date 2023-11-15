@@ -77,14 +77,14 @@
     <ClInclude Include="StartAnswer.h">
       <Filter>头文件\Raft</Filter>
     </ClInclude>
-    <ClInclude Include="Command.h">
-      <Filter>头文件\KV</Filter>
-    </ClInclude>
     <ClInclude Include="KVserver.h">
       <Filter>头文件\KV</Filter>
     </ClInclude>
     <ClInclude Include="RPC.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Command.h">
+      <Filter>头文件\ORM</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

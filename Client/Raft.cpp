@@ -51,14 +51,7 @@ StartAnswer Raft::start(Command command) {
 void Raft::setDebug() {
     debug = true;
 }
-void Raft::run() {
-    /*vector<Command> commands({ Command(CommandType::Append, "Lam", "55190906"),Command(CommandType::Append, "somebody", "55190922") });
-    for (Command command : commands) {
-        sleep_for(seconds(3));
-        if (debug) cout << "Raft::run " << command.getKey() << endl;
-        StartAnswer ans = start(command);
-    }*/
-}
+
 void Raft::execute(int newCommitIndex) {
     // Ö´ÐÐÂß¼­
     for (int i = commitedIndex + 1; i <= newCommitIndex; ++i) {

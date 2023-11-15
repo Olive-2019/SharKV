@@ -45,5 +45,4 @@ public:
 	StartAnswer start(Command command);
 	// 接收Raft系统的applyMsg信息
 	void applyMsg(rpc_conn conn, ApplyMsg applyMsg);
-	void run();
 };
