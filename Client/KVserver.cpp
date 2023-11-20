@@ -38,6 +38,10 @@ void KVserver::execute(const Command& command) {
 		// 写入
 		data[command.getKey()] = command.getValue();
 		break;
+	case CommandType::Delete:
+		// 若数据库中存在则删除
+		if (data.find(command.getKey()) != data.end()) data.erase(command.getKey());
+		break;
 	default:
 		// 数据库中不存在，则返回一个空字符串，存在则写到cache中去
 		string value;
