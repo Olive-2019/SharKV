@@ -5,7 +5,7 @@ VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Raft", "Raft\Raft.vcxproj", "{D84FA555-5AC2-4A24-9716-067A06255D40}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Client", "Client\Client.vcxproj", "{BAB9046F-FCA2-4F5F-97EB-766AF888B3E7}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KV", "Client\Client.vcxproj", "{BAB9046F-FCA2-4F5F-97EB-766AF888B3E7}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Clerk", "Clerk\Clerk.vcxproj", "{09A35FB8-B379-4C71-B2E5-B162C61DCDDD}"
 EndProject

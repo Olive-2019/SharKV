@@ -13,33 +13,45 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="头文件\KV">
+      <UniqueIdentifier>{31daefcd-1269-4f03-bfa7-c63cbd044566}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\KV">
+      <UniqueIdentifier>{8f1f6860-64a0-4c70-a99d-16b6d6b82eb6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Clerk.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="source.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="RPC.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Command.h">
+    <ClInclude Include="ShardCtrler.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Clerk.h">
+      <Filter>头文件\KV</Filter>
+    </ClInclude>
+    <ClInclude Include="Command.h">
+      <Filter>头文件\KV</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Clerk.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="RPC.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Command.cpp">
+    <ClCompile Include="ShardCtrler.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Clerk.cpp">
+      <Filter>源文件\KV</Filter>
+    </ClCompile>
+    <ClCompile Include="Command.cpp">
+      <Filter>源文件\KV</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
