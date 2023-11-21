@@ -62,7 +62,7 @@ class Leader : public State
 public:
 	Leader(int currentTerm, int ID, NetWorkAddress appendEntriesAddress, NetWorkAddress requestVoteAddress,
 		NetWorkAddress startAddress, NetWorkAddress applyMessageAddress, int commitIndex, int lastApplied, 
-		vector<LogEntry> logEntries, int votedFor = -1, int maxResendNum = 3, int snapshotThreshold = 10);
+		vector<LogEntry> logEntries, int votedFor = -1, int maxResendNum = 3, int snapshotThreshold = 500);
 	// 析构函数完成线程join和delete掉线程对象的任务
 	~Leader();
 	// 接收RequestVote

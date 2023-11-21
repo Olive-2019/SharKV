@@ -112,7 +112,8 @@ protected:
 public:
 	// 构造函数完成初始化两个接收线程和计时器线程的任务
 	State(int currentTerm, int ID, NetWorkAddress appendEntriesAddress,NetWorkAddress requestVoteAddress, 
-		NetWorkAddress startAddress, NetWorkAddress applyMessageAddress, int commitIndex, int lastApplied, vector<LogEntry> logEntries, int votedFor = -1, int handleNum = 10);
+		NetWorkAddress startAddress, NetWorkAddress applyMessageAddress, int commitIndex, int lastApplied, 
+		vector<LogEntry> logEntries, int votedFor = -1, int handleNum = 10);
 	// 析构函数完成线程join和delete掉线程对象的任务
 	virtual ~State();
 

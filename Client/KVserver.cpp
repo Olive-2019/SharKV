@@ -58,8 +58,9 @@ void KVserver::execute(const Command& command) {
 }
 // –¥øÏ’’
 void KVserver::snapshot() {
-	if (debug) cout << "KVserver::snapshot" << endl;
+	//if (debug) cout << "KVserver::snapshot" << endl;
 	snapshotPersistence.write(data);
+	//if (debug) cout << "KVserver::snapshot end" << endl;
 }
 
 void KVserver::registerAcceptCommand() {

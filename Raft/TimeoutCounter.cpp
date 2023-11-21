@@ -4,7 +4,8 @@ TimeoutCounter::TimeoutCounter() {
 	stop = false;
 	//electionTimeouts = getRandom(4, 5);
 	electionTimeouts = getRandom(10, 50);
-	electionTimeouts = getRandom(5, 10);
+	electionTimeouts = getRandom(3, 15);
+	//electionTimeouts = getRandom(2, 3);
 }
 int TimeoutCounter::getRandom(int start, int end) {
 	std::default_random_engine randomEngine;

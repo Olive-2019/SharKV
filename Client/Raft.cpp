@@ -19,6 +19,7 @@ void Raft::applyMsg(rpc_conn conn, ApplyMsg applyMsg) {
     execute(applyMsg.getIndex());
     // 若需要写快照，则调用写磁盘的函数
     if (applyMsg.isSnapshot()) snapshot(applyMsg.getIndex());
+    if (debug) cout << "Raft::applyMsg end" << endl;
 }
 void Raft::registerApplyMsg() {
     rpc_server server(applyMsgPort, 6);
@@ -71,6 +72,7 @@ void Raft::snapshot(int snapshotIndex) {
     lock_guard<mutex> lockGuard(stateLock);
     commands.erase(commands.begin(), commands.begin() + snapshotIndex);
     commitedIndex -= (snapshotIndex + 1);
+    //if (debug) cout << "Raft::snapshot end" << endl;
 }
 void Raft::updateCommands(vector<Command> commands) {
     // 找到第一个相同的command

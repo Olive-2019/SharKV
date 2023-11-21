@@ -114,7 +114,7 @@ void Leader::checkFollowers() {
 			else {
 				// next没到头，将后续的都发过去
 				//if (nextIndex[followerID] < 0) nextIndex[followerID] = logEntriesNum - 1;
-				sendAppendEntries(followerID, nextIndex[followerID] + 1, logEntriesNum - 1);
+				sendAppendEntries(followerID, nextIndex[followerID], logEntriesNum - 1);
 			}
 			
 		}
