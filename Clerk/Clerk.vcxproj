@@ -136,6 +136,7 @@
     <ClInclude Include="Command.h" />
     <ClInclude Include="RPC.h" />
     <ClInclude Include="ShardCtrler.h" />
+    <ClInclude Include="ShardKV.h" />
     <ClInclude Include="source.h" />
   </ItemGroup>
   <ItemGroup>
@@ -144,6 +145,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RPC.cpp" />
     <ClCompile Include="ShardCtrler.cpp" />
+    <ClCompile Include="ShardKV.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

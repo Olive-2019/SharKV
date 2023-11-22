@@ -36,6 +36,9 @@
     <ClInclude Include="Command.h">
       <Filter>头文件\KV</Filter>
     </ClInclude>
+    <ClInclude Include="ShardKV.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -52,6 +55,9 @@
     </ClCompile>
     <ClCompile Include="Command.cpp">
       <Filter>源文件\KV</Filter>
+    </ClCompile>
+    <ClCompile Include="ShardKV.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
