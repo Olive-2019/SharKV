@@ -25,7 +25,7 @@ public:
 	// 添加数据
 	void put(string key, string value);
 	// 向某个key追加数据
-	void append( string key, string value);
+	void append(string key, string value);
 	// 删除数据项
 	void deleteData(string key);
 	// 同步的get
