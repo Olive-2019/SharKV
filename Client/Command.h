@@ -2,7 +2,7 @@
 #include "source.h"
 enum CommandType
 {
-	Append, Put, Get, Delete
+	Append, Put, Get, Delete, AddShard, PutShard
 };
 class Command
 {

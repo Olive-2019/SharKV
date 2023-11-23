@@ -6,12 +6,13 @@
 #include <sstream>
 #include <future>
 #include <string>
-#include <set>
 #include <thread>
-#include <include/rest_rpc/rpc_server.h>
+#include <set>
+//#include <include/rest_rpc/rpc_server.h>
 #include "../rest_rpc/include/rest_rpc.hpp"
 using namespace rest_rpc::rpc_service;
 using std::mutex;
+using std::set;
 using std::unique_ptr;
 using namespace rest_rpc;
 using std::thread;
@@ -33,4 +34,3 @@ using std::future;
 using std::async;
 using std::thread;
 typedef pair<string, int> NetWorkAddress;
-using std::set;

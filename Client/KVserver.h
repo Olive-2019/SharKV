@@ -7,6 +7,9 @@
 class Raft;
 class KVserver
 {
+protected:
+
+	string selfIP;
 	map<string, string> data;
 	SnapshotPersistence snapshotPersistence;
 	Raft* raft;
@@ -24,10 +27,11 @@ class KVserver
 	// print the data in kv server
 	void printState() const;
 public:
-	KVserver(NetWorkAddress raftServerAddress, int applyMsgPort = 8001, int acceptCommandPort = 8011, string snapshotFilePath = "snapshot.data");
+	KVserver(NetWorkAddress raftServerAddress, int applyMsgPort = 8001, int acceptCommandPort = 8011, 
+		string snapshotFilePath = "snapshot.data", string selfIP = "127.0.0.1");
 	~KVserver();
 	// 真正执行命令，由Raft调用
-	void execute(const Command& command);
+	virtual void execute(const Command& command);
 	// 写快照，由Raft调用
 	void snapshot();
 	// 接收命令，丢给Raft系统

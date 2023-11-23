@@ -1,7 +1,7 @@
 #include "KVserver.h"
 
-KVserver::KVserver(NetWorkAddress raftServerAddress, int applyMsgPort, int acceptCommandPort, string snapshotFilePath):
-	raftServerAddress(raftServerAddress), snapshotPersistence(snapshotFilePath),debug(false), acceptCommandPort(acceptCommandPort) {
+KVserver::KVserver(NetWorkAddress raftServerAddress, int applyMsgPort, int acceptCommandPort, string snapshotFilePath, string selfIP):
+	raftServerAddress(raftServerAddress), snapshotPersistence(snapshotFilePath),debug(false), acceptCommandPort(acceptCommandPort), selfIP(selfIP) {
 	//NetWorkAddress raftServerAddress("127.0.0.1", 8291);
 	//Raft raft;
 	setDebug();
