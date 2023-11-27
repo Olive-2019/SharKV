@@ -71,6 +71,9 @@ void KVserver::registerAcceptCommand() {
 
 // 接收命令，丢给Raft系统，返回下标
 int KVserver::acceptCommand(rpc_conn conn, const Command& command) {
+	return acceptCommand_(command);
+}
+int KVserver::acceptCommand_(const Command& command) {
 	StartAnswer startAnswer = raft->start(command);
 	return startAnswer.index;
 }

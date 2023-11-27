@@ -22,12 +22,33 @@ void ShardKV::execute(const Command& command) {
 }
 
 // 检查失去了那些shard
-set<int> ShardKV::checkDeleted(vector<int> newShardIDs) {
-
+unordered_set<int> ShardKV::checkDeleted(vector<int> newShardIDs) {
+	unordered_set<int> deletedShardIDs;
+	unordered_set<int> newShardIDSet;
+	for (int id : newShardIDs) newShardIDSet.insert(id);
+	for (auto it = shardIDs.begin(); it != shardIDs.end(); ++it) {
+		if (newShardIDSet.find(*it) == newShardIDSet.end()) {
+			deletedShardIDs.insert(*it);
+		}
+	}
+	return deletedShardIDs;
 }
 // 发送Put请求
-void ShardKV::sendPutShardWithShardID(NetWorkAddress address, int shardID) {
+void ShardKV::sendPutShardWithShardID(int shardID) {
+	NetWorkAddress newAddress = rpc.invokeQueryNewGroup(shardCtrlerQueryNewGroupAddress, shardID);
+	unordered_set<pair<string, string>> shardData;
+	for (auto it = data.begin(); it != data.end(); ++it) {
+		if (getShardID(it->first) == shardID) {
+			shardData.insert(*it);
+			Command command(CommandType::Delete, NetWorkAddress("127.0.0.1", 8080), it->first);
+			KVserver::acceptCommand_(command);
+		}
+	}
+	for (auto it = shardData.begin(); it != shardData.end(); ++it) {
+		Command command(CommandType::PutShard, newAddress, it->first, it->second);
+		
 
+	}
 }
 // 发送AddShard请求
 void ShardKV::sendAddShard() {
@@ -35,9 +56,12 @@ void ShardKV::sendAddShard() {
 }
 // 拉取配置信息
 void ShardKV::getConfig() {
+	vector<int> newShardIDs = rpc.invokeQueryShardID(shardCtrlerQueryShardIDAddress, groupID);
+	unordered_set<int> deletedShardIDs = checkDeleted(newShardIDs);
 
 }
 // 向shardCtrler登记join
 void ShardKV::join() {
-	NetWorkAddress selfAddress(to_string)
+	NetWorkAddress selfAddress(string("127.0.0.1"), acceptCommandPort);
+	groupID = rpc.invokeJoin(shardCtrlerJoinAddress, selfAddress);
 }

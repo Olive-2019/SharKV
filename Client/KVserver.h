@@ -36,5 +36,6 @@ public:
 	void snapshot();
 	// 接收命令，丢给Raft系统
 	int acceptCommand(rpc_conn conn, const Command& command);
+	int acceptCommand_(const Command& command);
 };
 

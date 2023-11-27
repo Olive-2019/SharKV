@@ -1,12 +1,14 @@
 #pragma once
 #include "KVserver.h"
+#include <unordered_set>
+using std::unordered_set;
 class ShardKV :
     public KVserver
 {
 	// 系统中的shard数量，用于全局初始化
 	const int shardNum;
 	// 当前group的所有shard
-	set<int> shardIDs;
+	unordered_set<int> shardIDs;
 	// 当前group的唯一标志
 	int groupID;
 
@@ -23,9 +25,9 @@ class ShardKV :
 	// 计算该key对应的分片id
 	int getShardID(string key);
 	// 检查失去了那些shard
-	set<int> checkDeleted(vector<int> newShardIDs);
+	unordered_set<int> checkDeleted(vector<int> newShardIDs);
 	// 发送Put请求
-	void sendPutShardWithShardID(NetWorkAddress address, int shardID);
+	void sendPutShardWithShardID(int shardID);
 	// 发送AddShard请求
 	void sendAddShard();
 	// 拉取配置信息
