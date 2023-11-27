@@ -45,20 +45,29 @@ void ShardKV::sendPutShardWithShardID(int shardID) {
 		}
 	}
 	for (auto it = shardData.begin(); it != shardData.end(); ++it) {
+		// Command里的地址无所谓，PutShard不发内容
 		Command command(CommandType::PutShard, newAddress, it->first, it->second);
-		
-
+		rpc.invokeRemoteAcceptCommand(newAddress, command);
 	}
+	sendAddShard(newAddress, shardID);
 }
 // 发送AddShard请求
-void ShardKV::sendAddShard() {
-
+void ShardKV::sendAddShard(NetWorkAddress newShardAddress, int shardID) {
+	Command command(CommandType::AddShard, newShardAddress, to_string(shardID));
+	rpc.invokeRemoteAcceptCommand(newShardAddress, command);
 }
 // 拉取配置信息
 void ShardKV::getConfig() {
 	vector<int> newShardIDs = rpc.invokeQueryShardID(shardCtrlerQueryShardIDAddress, groupID);
 	unordered_set<int> deletedShardIDs = checkDeleted(newShardIDs);
-
+	vector<thread*> updateShardThread;
+	for (auto it = deletedShardIDs.begin(); it != deletedShardIDs.end(); ++it) {
+		updateShardThread.push_back(new thread(&ShardKV::sendPutShardWithShardID, this, *it));
+	}
+	for (thread* t : updateShardThread) {
+		t->join();
+		delete t;
+	}
 }
 // 向shardCtrler登记join
 void ShardKV::join() {

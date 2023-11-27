@@ -29,7 +29,7 @@ class ShardKV :
 	// 发送Put请求
 	void sendPutShardWithShardID(int shardID);
 	// 发送AddShard请求
-	void sendAddShard();
+	void sendAddShard(NetWorkAddress newShardAddress, int shardID);
 	// 拉取配置信息
 	void getConfig();
 	// 向shardCtrler登记join

@@ -12,5 +12,7 @@ public:
 	vector<int> invokeQueryShardID(NetWorkAddress address, int groupID);
 	// 向KVCtrler索要当前shardid对应的新地址
 	NetWorkAddress invokeQueryNewGroup(NetWorkAddress address, int shardID);
+	// 调用底层kv数据库的acceptCommand函数，给kv数据库传命令
+	int invokeRemoteAcceptCommand(NetWorkAddress address, Command command);
 };
 
