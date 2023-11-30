@@ -1,9 +1,9 @@
 # 可分片分布式容错数据库
 参考Mit6.824的后三个实验，逐步实现该数据库
 ## 线性一致性保证
-底层实现Raft协议以保证命令执行的线性一致性，其详细设计在(Raft)[https://github.com/Olive-2019/Raft/blob/master/Raft/readme.md]中。
+底层实现Raft协议以保证命令执行的线性一致性，其详细设计在[Raft](https://github.com/Olive-2019/Raft/blob/master/Raft/readme.md)中。
 ## 数据库功能
-在Raft之上实现的数据库。抽象来说就是两层，一层是较为赤裸的执行引擎，将命令传递给Raft系统，又等待Raft系统同步后执行；另一个是面向用户的命令封装层，将用户调用的接口封装成命令给执行引擎。其详细设计位于(KV Server)[https://github.com/Olive-2019/Raft/blob/master/Client/readme.md]中。
+在Raft之上实现的数据库。抽象来说就是两层，一层是较为赤裸的执行引擎，将命令传递给Raft系统，又等待Raft系统同步后执行；另一个是面向用户的命令封装层，将用户调用的接口封装成命令给执行引擎。其详细设计位于[KV Server](https://github.com/Olive-2019/Raft/blob/master/Client/readme.md)中。
 ## 持久化
 本系统存在两个需要持久化的内容，一个是Raft系统命令的持久化，一个是数据库的快照。前者是为了减少内存消耗，后者是为了恢复状态，二者不完全统一，但有一定关系。
 
